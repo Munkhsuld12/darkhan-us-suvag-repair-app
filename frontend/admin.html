@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>@media print { .sidebar, #menu-toggle, .sidebar-overlay { display:none!important; } .main-content { margin-left:0!important; } }</style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scrollable">
+        <div class="sidebar-user-card">
+          <p class="user-label">Хэрэглэгч</p>
+          <p class="user-fullname" id="sidebar-username">…</p>
+          <p class="user-username" id="sidebar-role">…</p>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="/admin.html" class="nav-item active">Админ</a>
+          <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
+          <a href="/reports.html" class="nav-item">Тайлан</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-sidebar-logout">Гарах</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
+        <span class="topbar-title">Админ тохиргоо</span>
+      </div>
+
+      <div class="app-page">
+        <!-- Tab buttons -->
+        <div class="tab-list">
+          <button class="tab-btn active" data-tab="departments">Алба</button>
+          <button class="tab-btn" data-tab="teams">Засварын бригад</button>
+          <button class="tab-btn" data-tab="users">Хэрэглэгчид</button>
+          <button class="tab-btn" data-tab="stations">Ус түгээх байр</button>
+        </div>
+
+        <!-- Departments panel -->
+        <div class="tab-panel" data-panel="departments">
+          <div class="panel-grid panel-grid-sidebar">
+            <div class="card section-stack">
+              <h2 style="font-size:17px;font-weight:700">Албадын жагсаалт</h2>
+              <div id="dept-list" class="section-stack"></div>
+            </div>
+            <div class="card section-stack">
+              <h2 id="dept-form-title" style="font-size:17px;font-weight:700">Алба нэмэх</h2>
+              <form id="dept-form" class="field-grid">
+                <input type="hidden" id="dept-id-input">
+                <div class="field">
+                  <label for="dept-name-input">Нэр</label>
+                  <input id="dept-name-input" type="text" class="input" placeholder="Албаны нэр" required>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="submit" class="btn btn-primary" style="flex:1">Хадгалах</button>
+                  <button type="button" id="dept-cancel" class="btn btn-secondary">Цуцлах</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams panel -->
+        <div class="tab-panel hidden" data-panel="teams">
+          <div class="panel-grid panel-grid-sidebar">
+            <div class="card section-stack">
+              <h2 style="font-size:17px;font-weight:700">Бригадын жагсаалт</h2>
+              <div id="team-list" class="section-stack"></div>
+            </div>
+            <div class="card section-stack">
+              <h2 id="team-form-title" style="font-size:17px;font-weight:700">Засварын бригад нэмэх</h2>
+              <form id="team-form" class="field-grid">
+                <input type="hidden" id="team-id-input">
+                <div class="field">
+                  <label for="team-name-input">Бригадын нэр</label>
+                  <input id="team-name-input" type="text" class="input" placeholder="Бригадын нэр" required>
+                </div>
+                <div class="field">
+                  <label for="team-dept-select">Алба</label>
+                  <select id="team-dept-select" class="select" required>
+                    <option value="">Алба сонгох</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="team-leader-select">Ахлагч</label>
+                  <select id="team-leader-select" class="select" required>
+                    <option value="">Хэрэглэгч сонгох</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="submit" class="btn btn-primary" style="flex:1">Хадгалах</button>
+                  <button type="button" id="team-cancel" class="btn btn-secondary">Цуцлах</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users panel -->
+        <div class="tab-panel hidden" data-panel="users">
+          <div class="panel-grid panel-grid-sidebar">
+            <div class="card section-stack">
+              <h2 style="font-size:17px;font-weight:700">Хэрэглэгчдийн жагсаалт</h2>
+              <div id="user-list" class="section-stack"></div>
+            </div>
+            <div class="card section-stack">
+              <h2 id="user-form-title" style="font-size:17px;font-weight:700">Хэрэглэгч нэмэх</h2>
+              <form id="user-form" class="field-grid">
+                <input type="hidden" id="user-id-input">
+                <div class="field">
+                  <label for="user-fullname-input">Бүтэн нэр</label>
+                  <input id="user-fullname-input" type="text" class="input" placeholder="Овог Нэр" required>
+                </div>
+                <div class="field-row-2">
+                  <div class="field">
+                    <label for="user-username-input">Нэвтрэх нэр</label>
+                    <input id="user-username-input" type="text" class="input" placeholder="username" required autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label for="user-phone-input">Утас</label>
+                    <input id="user-phone-input" type="tel" class="input" placeholder="XXXX-XXXX">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="user-password-input">Нууц үг</label>
+                  <input id="user-password-input" type="password" class="input" placeholder="Шинэ нууц үг (засах үед хоосон орхиж болно)" autocomplete="new-password">
+                </div>
+                <div class="field">
+                  <label for="user-role-select">Эрх</label>
+                  <select id="user-role-select" class="select"></select>
+                </div>
+                <div class="field">
+                  <label for="user-dept-select">Алба</label>
+                  <select id="user-dept-select" class="select">
+                    <option value="">Сонгох</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="user-team-select">Засварын бригад</label>
+                  <select id="user-team-select" class="select">
+                    <option value="">Сонгох</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="submit" class="btn btn-primary" style="flex:1">Хадгалах</button>
+                  <button type="button" id="user-cancel" class="btn btn-secondary">Цуцлах</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stations panel -->
+        <div class="tab-panel hidden" data-panel="stations">
+          <div class="card" style="padding:12px 16px;margin-bottom:16px">
+            <input id="station-search-input" type="search" class="input" placeholder="Код, байршил, хянагчаар хайх…">
+          </div>
+
+          <div class="panel-grid panel-grid-sidebar">
+            <div class="card section-stack">
+              <h2 style="font-size:17px;font-weight:700">Ус түгээх байрууд</h2>
+              <div id="station-list" class="stations-grid"></div>
+            </div>
+            <div class="card section-stack">
+              <h2 id="station-form-title" style="font-size:17px;font-weight:700">Ус түгээх байр нэмэх</h2>
+              <form id="station-form" class="field-grid">
+                <input type="hidden" id="station-id-input">
+                <div class="field">
+                  <label for="station-code-input">Код</label>
+                  <input id="station-code-input" type="text" class="input" placeholder="Жишээ: 1-5" required>
+                  <span class="field-hint">Баг-Дугаар (жишээ: 1-5)</span>
+                </div>
+                <div class="field">
+                  <label for="station-loc-input">Байршил</label>
+                  <input id="station-loc-input" type="text" class="input" placeholder="Хаяг, байршил">
+                </div>
+                <div class="field">
+                  <label for="station-care-input">Хянагч</label>
+                  <input id="station-care-input" type="text" class="input" placeholder="Хянагчийн нэр">
+                </div>
+                <div class="field">
+                  <label for="station-care-ph-input">Хянагчийн утас</label>
+                  <input id="station-care-ph-input" type="tel" class="input" placeholder="XXXX-XXXX">
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="submit" class="btn btn-primary" style="flex:1">Хадгалах</button>
+                  <button type="button" id="station-cancel" class="btn btn-secondary">Цуцлах</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/admin.js"></script>
+  <script type="module">
+    import { setupSidebar } from "/assets/js/sidebar.js";
+    document.addEventListener("DOMContentLoaded", () => setupSidebar());
+  </script>
+</body>
+</html>

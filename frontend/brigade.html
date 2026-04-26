@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бригад — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>@media print { .sidebar, #menu-toggle, .sidebar-overlay { display:none!important; } .main-content { margin-left:0!important; } }</style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scrollable">
+        <div class="sidebar-user-card">
+          <p class="user-label">Хэрэглэгч</p>
+          <p class="user-fullname" id="sidebar-username">…</p>
+          <p class="user-username" id="sidebar-role">…</p>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="/brigade.html" class="nav-item active">Бригадын ахлагч</a>
+          <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
+          <a href="/reports.html" class="nav-item">Тайлан</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-sidebar-logout">Гарах</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
+        <span class="topbar-title">Бригадын ахлагч</span>
+      </div>
+
+      <div class="app-page">
+        <!-- Summary card (3-column) -->
+        <div class="card" style="padding:16px">
+          <div class="brigade-stats">
+            <div class="brig-stat">
+              <p class="stat-label">Нийт</p>
+              <p class="stat-value" id="brig-total">0</p>
+            </div>
+            <div class="brig-stat tone-sky">
+              <p class="stat-label">Явц</p>
+              <p class="stat-value" id="brig-progress">0</p>
+            </div>
+            <div class="brig-stat tone-amber">
+              <p class="stat-label">Үлдсэн</p>
+              <p class="stat-value" id="brig-pending">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work list -->
+        <div id="brigade-list" class="compact-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finish work modal -->
+  <div id="finish-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Гүйцэтгэл</h2>
+        <button class="modal-close" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="finish-form" class="field-grid">
+          <div class="field">
+            <label for="finish-report">Тайлан</label>
+            <textarea id="finish-report" class="textarea" rows="4" placeholder="Хийсэн ажлын тайлан…" required></textarea>
+          </div>
+          <div class="field">
+            <label for="finish-materials">Ашигласан материал</label>
+            <input id="finish-materials" type="text" class="input" placeholder="Материалын жагсаалт (заавал биш)">
+          </div>
+          <div class="field">
+            <p style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:8px">Оролцсон ажилтнууд</p>
+            <div id="workers-list" class="compact-grid" style="gap:8px"></div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
+            <button type="submit" class="btn btn-primary">Хадгалах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/brigade.js"></script>
+  <script type="module">
+    import { setupSidebar } from "/assets/js/sidebar.js";
+    document.addEventListener("DOMContentLoaded", () => setupSidebar());
+  </script>
+</body>
+</html>

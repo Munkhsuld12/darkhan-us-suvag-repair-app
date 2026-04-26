@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диспетчер — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>@media print { .sidebar, #menu-toggle, .sidebar-overlay { display:none!important; } .main-content { margin-left:0!important; } }</style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scrollable">
+        <div class="sidebar-user-card">
+          <p class="user-label">Хэрэглэгч</p>
+          <p class="user-fullname" id="sidebar-username">…</p>
+          <p class="user-username" id="sidebar-role">…</p>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="/dispatcher.html" class="nav-item active">Диспетчер</a>
+          <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
+          <a href="/reports.html" class="nav-item">Тайлан</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-sidebar-logout">Гарах</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
+        <span class="topbar-title">Диспетчер</span>
+        <div style="margin-left:auto">
+          <button id="btn-new-ticket" class="btn btn-primary btn-sm">Шинэ хүсэлт</button>
+        </div>
+      </div>
+
+      <div class="app-page">
+        <!-- Summary cards -->
+        <div class="compact-grid compact-grid-4">
+          <div class="summary-card tone-brand">
+            <p class="label">Веб</p>
+            <p class="value" id="sum-web">0</p>
+          </div>
+          <div class="summary-card tone-amber">
+            <p class="label">Утас</p>
+            <p class="value" id="sum-phone">0</p>
+          </div>
+          <div class="summary-card tone-blue">
+            <p class="label">Нийт хүсэлт</p>
+            <p class="value" id="sum-total">0</p>
+          </div>
+          <div class="summary-card tone-rose">
+            <p class="label">Идэвхтэй</p>
+            <p class="value" id="sum-active">0</p>
+          </div>
+        </div>
+
+        <!-- Phone form + Workload -->
+        <div class="panel-grid panel-grid-dispatcher">
+          <div class="card section-stack">
+            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Утасаар бүртгэх</h2>
+            <form id="phone-form" class="field-grid">
+              <div class="field">
+                <label for="phone-station-code">Худгийн код</label>
+                <input id="phone-station-code" type="text" class="input" placeholder="Жишээ: 1-5" required autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="phone-issue">Төрөл</label>
+                <select id="phone-issue" class="select" required></select>
+              </div>
+              <div class="field">
+                <label for="phone-desc">Тайлбар</label>
+                <textarea id="phone-desc" class="textarea" rows="3" placeholder="Тайлбар…" required></textarea>
+              </div>
+              <div class="field-row-2">
+                <div class="field">
+                  <label for="phone-name">Нэр</label>
+                  <input id="phone-name" type="text" class="input" placeholder="Нэр" required>
+                </div>
+                <div class="field">
+                  <label for="phone-number">Утас</label>
+                  <input id="phone-number" type="tel" class="input" placeholder="XXXX-XXXX" required>
+                </div>
+              </div>
+              <p id="phone-error" class="error-msg" style="display:none"></p>
+              <div id="phone-success" class="success-msg" style="display:none">Амжилттай бүртгэлээ.</div>
+              <button type="submit" class="btn btn-primary">Бүртгэх</button>
+            </form>
+          </div>
+
+          <div class="card section-stack">
+            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Бригадын ачаалал</h2>
+            <div id="workload-grid" class="compact-grid" style="gap:10px"></div>
+          </div>
+        </div>
+
+        <!-- Complaints + Tickets -->
+        <div class="panel-grid panel-grid-2">
+          <div class="card section-stack" style="min-height:360px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Ирсэн хүсэлт</h2>
+              <span id="complaints-count" class="badge badge-normal" style="display:none"></span>
+            </div>
+            <div id="complaints-list" class="section-stack scroll-pane" style="margin-top:4px"></div>
+          </div>
+
+          <div class="card section-stack" style="min-height:360px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Засварын хүсэлт</h2>
+              <span id="tickets-count" class="badge badge-normal" style="display:none"></span>
+            </div>
+            <div id="tickets-list" class="section-stack scroll-pane" style="margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Convert complaint → ticket modal -->
+  <div id="ticket-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="ticket-modal-title">Шинэ хүсэлт</h2>
+        <button class="modal-close" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="ticket-form" class="field-grid">
+          <div class="field">
+            <label for="tm-station">Ус түгээх байр</label>
+            <input id="tm-station" type="text" class="input" list="station-datalist" placeholder="Код, нэр, байршил, хянагчаар хайх" autocomplete="off" required>
+            <datalist id="station-datalist"></datalist>
+            <input type="hidden" id="tm-station-id">
+          </div>
+          <div class="field">
+            <label for="tm-issue">Төрөл</label>
+            <select id="tm-issue" class="select" required></select>
+          </div>
+          <div class="field">
+            <label for="tm-desc">Тайлбар</label>
+            <textarea id="tm-desc" class="textarea" rows="3" placeholder="Тайлбар…" required></textarea>
+          </div>
+          <div class="field-row-3">
+            <div class="field">
+              <label for="tm-source">Эх сурвалж</label>
+              <select id="tm-source" class="select">
+                <option value="phone">Утас</option>
+                <option value="web">Вэб</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tm-dept">Алба</label>
+              <select id="tm-dept" class="select" required>
+                <option value="">Алба сонгох</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tm-priority">Яаралт</label>
+              <select id="tm-priority" class="select">
+                <option value="normal">Энгийн</option>
+                <option value="urgent">Яаралтай</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="tm-team">Засварын бригад</label>
+            <select id="tm-team" class="select" required>
+              <option value="">Засварын бригад сонгох</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
+            <button type="submit" class="btn btn-primary">Хадгалах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign ticket modal -->
+  <div id="assign-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Хуваарилах</h2>
+        <button class="modal-close" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="assign-ticket-info" class="card" style="padding:12px 14px;background:var(--slate-50);margin-bottom:16px;box-shadow:none"></div>
+        <form id="assign-form" class="field-grid">
+          <div class="field">
+            <label for="am-dept">Алба</label>
+            <select id="am-dept" class="select" required>
+              <option value="">Алба сонгох</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="am-team">Засварын бригад</label>
+            <select id="am-team" class="select" required>
+              <option value="">Засварын бригад сонгох</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="am-priority">Яаралт</label>
+            <select id="am-priority" class="select">
+              <option value="normal">Энгийн</option>
+              <option value="urgent">Яаралтай</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
+            <button type="submit" class="btn btn-primary">Хуваарилах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/dispatcher.js"></script>
+  <script type="module">
+    import { setupSidebar } from "/assets/js/sidebar.js";
+    document.addEventListener("DOMContentLoaded", () => setupSidebar());
+  </script>
+</body>
+</html>

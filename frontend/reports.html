@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тайлан — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>
+    @media print {
+      .sidebar, #menu-toggle, .btn-csv, .btn-print-btn, .sidebar-overlay, [data-close-modal] { display: none !important; }
+      .main-content { margin-left: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scrollable">
+        <div class="sidebar-user-card">
+          <p class="user-label">Хэрэглэгч</p>
+          <p class="user-fullname" id="sidebar-username">…</p>
+          <p class="user-username" id="sidebar-role">…</p>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item" id="dashboard-link">Хяналтын самбар</a>
+          <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
+          <a href="/reports.html" class="nav-item active">Тайлан</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-sidebar-logout">Гарах</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
+        <span class="topbar-title">Тайлан</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="btn-csv" class="btn btn-secondary btn-sm btn-csv">CSV татах</button>
+          <button id="btn-print" class="btn btn-primary btn-sm btn-print-btn">Хэвлэх</button>
+        </div>
+      </div>
+
+      <div class="app-page">
+        <!-- Report type tabs -->
+        <div id="report-tabs" class="card" style="padding:12px 14px">
+          <div class="tab-list" id="report-tab-list"></div>
+        </div>
+
+        <!-- Summary cards -->
+        <div id="summary-cards" class="compact-grid compact-grid-4"></div>
+
+        <!-- Filters card -->
+        <div class="card section-stack">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Шүүлтүүр</h2>
+            <button id="filter-reset" class="btn btn-ghost btn-sm">Цэвэрлэх</button>
+          </div>
+          <div class="compact-grid compact-grid-4" style="gap:12px">
+            <div class="field">
+              <label for="filter-from">Эхлэх огноо</label>
+              <input id="filter-from" type="date" class="input">
+            </div>
+            <div class="field">
+              <label for="filter-to">Дуусах огноо</label>
+              <input id="filter-to" type="date" class="input">
+            </div>
+            <div class="field">
+              <label for="filter-bag">Баг</label>
+              <select id="filter-bag" class="select">
+                <option value="all">Бүх баг</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-station">Ус түгээх байр</label>
+              <select id="filter-station" class="select">
+                <option value="all">Бүх байр</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-dept">Алба</label>
+              <select id="filter-dept" class="select">
+                <option value="all">Бүх алба</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-team">Бригад</label>
+              <select id="filter-team" class="select">
+                <option value="all">Бүх бригад</option>
+              </select>
+            </div>
+            <div class="field" id="filter-status-wrap">
+              <label for="filter-status">Төлөв</label>
+              <select id="filter-status" class="select">
+                <option value="all">Бүх төлөв</option>
+                <option value="new">Шинэ</option>
+                <option value="assigned">Хуваарилсан</option>
+                <option value="urgent">Яаралтай</option>
+                <option value="in_progress">Явцдаа</option>
+                <option value="done">Дууссан</option>
+              </select>
+            </div>
+            <div class="field" id="filter-issue-wrap">
+              <label for="filter-issue">Төрөл</label>
+              <select id="filter-issue" class="select">
+                <option value="all">Бүх төрөл</option>
+              </select>
+            </div>
+            <div class="field" id="filter-source-wrap">
+              <label for="filter-source">Эх сурвалж</label>
+              <select id="filter-source" class="select">
+                <option value="all">Бүгд</option>
+                <option value="web">Вэб</option>
+                <option value="phone">Утас</option>
+              </select>
+            </div>
+            <div class="field" id="filter-priority-wrap">
+              <label for="filter-priority">Яаралт</label>
+              <select id="filter-priority" class="select">
+                <option value="all">Бүгд</option>
+                <option value="normal">Энгийн</option>
+                <option value="urgent">Яаралтай</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main + Breakdowns -->
+        <div class="panel-grid panel-grid-reports">
+          <div class="card section-stack" style="min-height:360px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <h2 id="main-table-title" style="font-size:20px;font-weight:700;color:var(--ink-900)">Засварын хүсэлт</h2>
+              <span id="main-count" class="badge badge-normal"></span>
+            </div>
+            <div id="main-table-wrap" class="scroll-pane"></div>
+          </div>
+
+          <div id="breakdown-cards" class="section-stack"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/reports.js"></script>
+  <script type="module">
+    import { setupSidebar } from "/assets/js/sidebar.js";
+    import { getUser } from "/assets/js/auth.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setupSidebar();
+      const user = getUser();
+      const map = {
+        dispatcher:           "/dispatcher.html",
+        general_engineer:     "/engineer.html",
+        department_engineer:  "/engineer.html",
+        brigade_leader:       "/brigade.html",
+        admin:                "/admin.html",
+      };
+      const link = document.getElementById("dashboard-link");
+      if (link && user) link.href = map[user.role] || "/app.html";
+    });
+  </script>
+</body>
+</html>

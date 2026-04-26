@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ус түгээх байрууд — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="bg-hero">
+
+  <header class="pub-header" id="pub-header">
+    <div class="pub-header-wrap">
+      <div class="pub-header-card">
+        <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
+          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+        </a>
+        <a href="/login.html" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="pub-main">
+
+    <!-- Mobile: single-card layout with select + filters -->
+    <div id="mobile-view">
+      <div class="card card-sm section-stack">
+        <div>
+          <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.24em;color:var(--slate-400)">Ус түгээх байр</p>
+          <h1 style="font-size:1.5rem;font-weight:700;line-height:1.2;color:var(--ink-900);margin-top:4px">Ус түгээх байрууд</h1>
+        </div>
+
+        <!-- Bag select (mobile) -->
+        <div class="field">
+          <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Баг</label>
+          <select class="select" id="bag-select-mobile"></select>
+        </div>
+
+        <!-- Search -->
+        <div class="field">
+          <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Хайлт</label>
+          <input class="input" id="station-search" type="text" placeholder="Код, нэр, байршил, хянагчаар хайх">
+        </div>
+
+        <!-- Status + Dept filters -->
+        <div class="field-row-2">
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Төлөв</label>
+            <select class="select" id="status-filter">
+              <option value="all">Бүх төлөв</option>
+              <option value="new">Шинэ</option>
+              <option value="assigned">Хуваарилсан</option>
+              <option value="urgent">Яаралтай</option>
+              <option value="in_progress">Явцдаа</option>
+              <option value="done">Дууссан</option>
+            </select>
+          </div>
+          <div class="field">
+            <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Алба</label>
+            <select class="select" id="dept-filter">
+              <option value="all">Бүх алба</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- View filter chips -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="view-filter-chips"></div>
+      </div>
+
+      <!-- Station table card -->
+      <div class="card card-sm section-stack" style="margin-top:0">
+        <div style="padding-bottom:12px;border-bottom:1px solid var(--slate-200)">
+          <h2 id="folder-title-mobile" style="font-size:1.25rem;font-weight:700;color:var(--ink-900)">—</h2>
+        </div>
+        <div id="station-table-mobile"></div>
+      </div>
+    </div>
+
+    <!-- Desktop: two-column layout (xl) -->
+    <div id="desktop-view" style="display:none">
+      <div style="display:grid;grid-template-columns:304px minmax(0,1fr);gap:24px;align-items:start">
+
+        <!-- Left: bag folder grid -->
+        <div class="card card-sm section-stack" style="position:sticky;top:100px;max-height:calc(100vh - 7.5rem);overflow-y:auto">
+          <h1 style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">Багууд</h1>
+          <div id="bag-folder-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+        </div>
+
+        <!-- Right: station table with filters -->
+        <div class="card card-sm" style="display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 7.5rem);overflow:hidden">
+          <div style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px;flex-shrink:0">
+            <h2 id="folder-title-desktop" style="font-size:1.4rem;font-weight:700;color:var(--ink-900)">—</h2>
+
+            <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr">
+              <div class="field">
+                <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Ус түгээх байр хайх</label>
+                <input class="input" id="station-search-desktop" type="text" placeholder="Код, нэр, байршил, хянагчаар хайх">
+              </div>
+              <div class="field">
+                <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Төлөв</label>
+                <select class="select" id="status-filter-desktop">
+                  <option value="all">Бүх төлөв</option>
+                  <option value="new">Шинэ</option>
+                  <option value="assigned">Хуваарилсан</option>
+                  <option value="urgent">Яаралтай</option>
+                  <option value="in_progress">Явцдаа</option>
+                  <option value="done">Дууссан</option>
+                </select>
+              </div>
+              <div class="field">
+                <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Алба</label>
+                <select class="select" id="dept-filter-desktop">
+                  <option value="all">Бүх алба</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px" id="view-filter-chips-desktop"></div>
+          </div>
+
+          <div id="station-table-desktop" style="overflow-y:auto;flex:1;min-height:0"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module" src="/assets/js/pages/stations.js"></script>
+</body>
+</html>

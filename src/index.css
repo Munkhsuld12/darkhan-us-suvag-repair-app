@@ -1,0 +1,75 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-700 antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(30, 183, 232, 0.05), transparent 18%),
+      linear-gradient(180deg, #f8fbff 0%, #f1f6fd 100%);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #7ea8e5 transparent;
+  }
+
+  ::selection {
+    background: rgba(45, 131, 243, 0.18);
+  }
+}
+
+@layer components {
+  .app-page {
+    @apply space-y-3 sm:space-y-4;
+  }
+
+  .section-stack {
+    @apply space-y-3;
+  }
+
+  .compact-grid {
+    @apply grid gap-3;
+  }
+
+  .panel-grid {
+    @apply grid gap-3 sm:gap-4 xl:gap-4;
+  }
+
+  .field-grid {
+    @apply grid gap-3;
+  }
+
+  .subtle-ring {
+    @apply ring-1 ring-white/70;
+  }
+
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-700;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-2xl border border-slate-200 bg-white;
+  }
+
+  .scroll-pane {
+    @apply xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1;
+  }
+
+  .chip-scroll {
+    @apply flex gap-2 overflow-x-auto pb-1;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .chip-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

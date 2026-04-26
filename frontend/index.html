@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="bg-hero">
+
+  <header class="pub-header" id="pub-header">
+    <div class="pub-header-wrap">
+      <div class="pub-header-card">
+        <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
+          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+        </a>
+        <button id="open-login-btn" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login modal -->
+  <div id="login-modal" style="display:none;position:fixed;inset:0;z-index:60;overflow-y:auto;background:rgba(15,33,61,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:12px;align-items:center;justify-content:center">
+    <div style="width:100%;max-width:420px;margin:auto">
+      <div class="card" style="padding:28px 28px 24px">
+        <!-- Modal header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px">
+          <div>
+            <p style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate-500);margin-bottom:4px">Нэвтрэх</p>
+            <h2 style="font-size:1.25rem;font-weight:800;color:var(--ink-900);letter-spacing:-0.02em">Дотоод хэрэглэгч</h2>
+          </div>
+          <button id="close-login-btn" style="border-radius:999px;background:var(--slate-100);border:none;padding:8px 12px;font-size:13px;font-weight:600;color:var(--slate-600);cursor:pointer;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background='var(--slate-200)'" onmouseout="this.style.background='var(--slate-100)'">Хаах</button>
+        </div>
+
+        <!-- Demo accounts -->
+        <div style="margin-bottom:20px">
+          <p style="font-size:13px;font-weight:600;color:var(--slate-600);margin-bottom:10px">Туршилтын хэрэглэгч</p>
+          <div class="demo-grid">
+            <button class="demo-btn" data-username="admin" data-password="admin123">
+              <span class="demo-role">Админ</span>
+              <span class="demo-creds">admin / admin123</span>
+            </button>
+            <button class="demo-btn" data-username="dispatcher" data-password="dispatch123">
+              <span class="demo-role">Диспетчер</span>
+              <span class="demo-creds">dispatcher / dispatch123</span>
+            </button>
+            <button class="demo-btn" data-username="chief" data-password="chief123">
+              <span class="demo-role">Ерөнхий инженер</span>
+              <span class="demo-creds">chief / chief123</span>
+            </button>
+            <button class="demo-btn" data-username="eng1" data-password="eng123">
+              <span class="demo-role">Хэлтсийн инженер</span>
+              <span class="demo-creds">eng1 / eng123</span>
+            </button>
+            <button class="demo-btn" data-username="bat" data-password="bat123" style="grid-column:1/-1">
+              <span class="demo-role">Бригадын ахлагч</span>
+              <span class="demo-creds">bat / bat123</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Login form -->
+        <form id="login-modal-form" class="field-grid">
+          <div class="field">
+            <label for="lm-username">Нэвтрэх нэр</label>
+            <input id="lm-username" type="text" class="input" placeholder="Жишээ: admin" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="lm-password">Нууц үг</label>
+            <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна" required autocomplete="current-password">
+          </div>
+          <p id="lm-error" class="error-msg" style="display:none"></p>
+          <button id="lm-submit" type="submit" class="btn btn-primary btn-full btn-lg">Нэвтрэх</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <main class="pub-main">
+
+    <!-- Complaint card -->
+    <div class="card card-sm" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+      <h2 style="font-size:15px;font-weight:600;color:var(--ink-900)">Гомдол, хүсэлт</h2>
+      <button id="open-complaint-btn" class="btn btn-primary btn-sm" style="flex-shrink:0">Хүсэлт илгээх</button>
+    </div>
+
+    <!-- Complaint modal -->
+    <div id="complaint-modal" style="display:none;position:fixed;inset:0;z-index:50;overflow-y:auto;background:rgba(15,33,61,0.40);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:12px;align-items:flex-start;justify-content:center">
+      <div style="width:100%;max-width:640px;margin:auto">
+        <div class="card" style="padding:20px 24px">
+          <!-- Modal header -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--slate-200);padding-bottom:12px;margin-bottom:16px">
+            <h2 style="font-size:1.25rem;font-weight:700;color:var(--ink-900)">Гомдол, хүсэлт илгээх</h2>
+            <button id="close-complaint-btn" style="border-radius:999px;background:var(--slate-100);border:none;padding:8px 12px;font-size:13px;font-weight:600;color:var(--slate-600);cursor:pointer;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background='var(--slate-200)'" onmouseout="this.style.background='var(--slate-100)'">Хаах</button>
+          </div>
+
+          <!-- Form -->
+          <form id="complaint-form" class="field-grid">
+            <div class="field">
+              <label for="c-station">Ус түгээх байрны код <span style="color:var(--rose-500)">*</span></label>
+              <input id="c-station" type="text" class="input" list="c-station-datalist" placeholder="Жишээ: 1-14" required autocomplete="off">
+              <datalist id="c-station-datalist"></datalist>
+            </div>
+
+            <div class="field">
+              <label for="c-issue">Асуудлын төрөл <span style="color:var(--rose-500)">*</span></label>
+              <select id="c-issue" class="select" required></select>
+            </div>
+
+            <div class="field">
+              <label for="c-desc">Тайлбар <span style="color:var(--rose-500)">*</span></label>
+              <textarea id="c-desc" class="textarea" placeholder="Асуудлаа бичнэ үү" required></textarea>
+            </div>
+
+            <div class="field-row-2">
+              <div class="field">
+                <label for="c-name">Нэр <span style="color:var(--rose-500)">*</span></label>
+                <input id="c-name" type="text" class="input" required>
+              </div>
+              <div class="field">
+                <label for="c-phone">Утас <span style="color:var(--rose-500)">*</span></label>
+                <input id="c-phone" type="tel" class="input" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="c-photo">Зураг</label>
+              <input id="c-photo" type="file" class="input" accept="image/*" style="padding:6px 12px">
+            </div>
+
+            <p id="c-error" class="error-msg" style="display:none"></p>
+            <div id="c-success" class="hidden" style="border-radius:var(--radius);background:var(--emerald-50);padding:12px 16px;font-size:14px;font-weight:500;color:var(--emerald-700)">
+              Амжилттай бүртгэгдлээ.
+            </div>
+
+            <div style="display:flex;justify-content:flex-end">
+              <button type="submit" class="btn btn-primary">Илгээх</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stations header card with bag chips + search -->
+    <div class="card card-sm section-stack">
+      <h1 style="font-size:clamp(1.25rem,4vw,1.5rem);font-weight:800;letter-spacing:-0.02em;color:var(--ink-900)">Ус түгээх байрууд</h1>
+      <div class="chip-scroll" id="bag-chips"></div>
+      <div class="field">
+        <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Хайлт</label>
+        <input class="input" id="station-search" type="text" placeholder="Код, нэр, байршил, хянагчаар хайх">
+      </div>
+    </div>
+
+    <!-- Two-column panel -->
+    <div class="panel-grid panel-grid-home">
+
+      <!-- Station preview (left) -->
+      <div class="card card-sm" style="max-height:720px;min-height:360px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
+          <h2 id="station-grid-title" style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">—</h2>
+          <a id="all-stations-link" href="/stations.html" style="font-size:13px;font-weight:600;color:var(--brand-700);text-decoration:none;flex-shrink:0">Бүгдийг харах</a>
+        </div>
+        <div style="overflow-y:auto;flex:1;min-height:0;padding-right:4px">
+          <div class="compact-grid" id="station-preview-grid" style="align-content:start"></div>
+        </div>
+      </div>
+
+      <!-- Planned tasks (right) -->
+      <div class="card card-sm section-stack">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <h2 style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">Төлөвлөгдсөн ажил</h2>
+          <span id="planned-tasks-badge" class="hidden" style="border-radius:999px;background:var(--slate-100);padding:4px 10px;font-size:11px;font-weight:600;color:var(--slate-600)"></span>
+        </div>
+        <div id="planned-tasks-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Ignore generated and non-source files from GitHub language stats
+dist/** linguist-generated=true
+node_modules/** linguist-generated=true
+package-lock.json linguist-generated=true
+*.css linguist-vendored=true
+*.html linguist-vendored=true

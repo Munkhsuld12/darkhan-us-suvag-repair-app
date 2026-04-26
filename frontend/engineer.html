@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Инженер — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>@media print { .sidebar, #menu-toggle, .sidebar-overlay { display:none!important; } .main-content { margin-left:0!important; } }</style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scrollable">
+        <div class="sidebar-user-card">
+          <p class="user-label">Хэрэглэгч</p>
+          <p class="user-fullname" id="sidebar-username">…</p>
+          <p class="user-username" id="sidebar-role">…</p>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="/engineer.html" class="nav-item active">Инженер</a>
+          <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
+          <a href="/reports.html" class="nav-item">Тайлан</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-sidebar-logout">Гарах</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
+        <span class="topbar-title">Инженер</span>
+      </div>
+
+      <div class="app-page">
+        <!-- Stat block (no outer padding, inline grid) -->
+        <div class="stat-block">
+          <div class="stat-block-inner">
+            <div class="stat-cell stat-brand">
+              <p class="stat-label">Нийт</p>
+              <p class="stat-value" id="eng-total">0</p>
+            </div>
+            <div class="stat-cell stat-sky">
+              <p class="stat-label">Явц</p>
+              <p class="stat-value" id="eng-progress">0</p>
+            </div>
+            <div class="stat-cell stat-emerald">
+              <p class="stat-label">Дууссан</p>
+              <p class="stat-value" id="eng-done">0</p>
+            </div>
+            <div class="stat-cell stat-amber">
+              <p class="stat-label">Хоцролт</p>
+              <p class="stat-value" id="eng-delayed">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-grid panel-grid-engineer">
+          <!-- Left: Task creation form -->
+          <div class="card section-stack">
+            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Шинэ ажил</h2>
+            <form id="task-form" class="field-grid">
+              <div class="field-row-2">
+                <div class="field" id="dept-field-wrap">
+                  <label for="form-dept">Алба</label>
+                  <select id="form-dept" class="select" required>
+                    <option value="">Алба сонгох</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="form-team">Засварын бригад</label>
+                  <select id="form-team" class="select" required>
+                    <option value="">Засварын бригад сонгох</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="form-station">Ус түгээх байр</label>
+                <input id="form-station" type="text" class="input" list="engineer-station-datalist" placeholder="Код, нэр, байршил, хянагчаар хайх" autocomplete="off" required>
+                <datalist id="engineer-station-datalist"></datalist>
+                <input type="hidden" id="form-station-id">
+              </div>
+              <div class="field">
+                <label for="form-date">Огноо</label>
+                <input id="form-date" type="date" class="input" required>
+              </div>
+              <div class="field">
+                <label for="form-desc">Тайлбар</label>
+                <textarea id="form-desc" class="textarea" rows="3" placeholder="Хийх ажлын тайлбар…" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Ажил үүсгэх</button>
+            </form>
+          </div>
+
+          <!-- Right: Tasks list -->
+          <div class="card section-stack" style="min-height:360px">
+            <div style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+                <div>
+                  <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Өдөр тутмын ажил</h2>
+                  <p id="tasks-progress-label" style="font-size:13px;color:var(--slate-500);margin-top:2px"></p>
+                </div>
+                <div id="dept-filter-wrap" style="display:none">
+                  <select id="dept-filter" class="select" style="min-width:160px">
+                    <option value="all">Бүх алба</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div id="tasks-list" class="section-stack scroll-pane"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/engineer.js"></script>
+  <script type="module">
+    import { setupSidebar } from "/assets/js/sidebar.js";
+    document.addEventListener("DOMContentLoaded", () => setupSidebar());
+  </script>
+</body>
+</html>

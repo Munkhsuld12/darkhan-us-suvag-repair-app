@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Гомдол гаргах — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="bg-hero">
+  <header class="pub-header" id="pub-header">
+    <div class="pub-header-wrap">
+      <div class="pub-header-card">
+        <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
+          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+        </a>
+        <a href="/login.html" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="pub-main" style="max-width:700px">
+    <div class="page-header" style="margin-bottom:24px">
+      <div>
+        <h1 style="font-size:22px;font-weight:800">Гомдол гаргах</h1>
+        <p style="font-size:14px;color:var(--slate-500);margin-top:4px">
+          Ус хангамжийн асуудлаа бүртгүүлнэ үү. Ажлын цагт: 08:00–18:00
+        </p>
+      </div>
+      <a href="/" class="btn btn-secondary btn-sm">← Буцах</a>
+    </div>
+
+    <div class="card">
+      <form id="complaint-form" class="field-grid">
+        <div class="field">
+          <label for="stationQuery">Ус түгээх байрын код</label>
+          <input
+            id="stationQuery"
+            type="text"
+            class="input"
+            list="station-datalist"
+            placeholder="Жишээ: 1-5"
+            required
+            autocomplete="off"
+          >
+          <datalist id="station-datalist"></datalist>
+          <span class="field-hint">Кодоор хайна уу (жишээ: 1-5, 3-12)</span>
+        </div>
+
+        <div class="field">
+          <label for="issueType">Асуудлын төрөл</label>
+          <select id="issueType" class="select" required></select>
+        </div>
+
+        <div class="field">
+          <label for="description">Тайлбар</label>
+          <textarea id="description" class="textarea" rows="4" placeholder="Асуудлыг дэлгэрэнгүй бичнэ үү..." required></textarea>
+        </div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <label for="citizenName">Таны нэр</label>
+            <input id="citizenName" type="text" class="input" placeholder="Овог Нэр" required>
+          </div>
+          <div class="field">
+            <label for="phoneNumber">Утасны дугаар</label>
+            <input id="phoneNumber" type="tel" class="input" placeholder="XXXX-XXXX" required>
+          </div>
+        </div>
+
+        <p id="complaint-error" class="error-msg"></p>
+        <div id="complaint-success" class="success-msg hidden">
+          Таны гомдол амжилттай бүртгэгдлээ. Бид тантай холбогдох болно.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">Гомдол илгээх</button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/complaint.js"></script>
+</body>
+</html>
