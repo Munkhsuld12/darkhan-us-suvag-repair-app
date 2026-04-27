@@ -1,161 +1,150 @@
-# Darkhan-Us Suvag Repair App
+# Дархан-Ус Суваг — Засварын Менежментийн Систем
 
-Дархан-Ус Суваг ХХК-ийн ус түгээх байрны засвар, үйлчилгээний дуудлагын веб программын эхний ажиллах хувилбар.
+Дархан-Ус Суваг ХК-ийн ус түгээх байрны засвар үйлчилгээг удирдах веб систем.
 
-## Tech Stack
+Иргэд гомдол илгээх, диспетчер дуудлага хуваарилах, инженер болон бригад ажлаа бүртгэх боломжтой.
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- Local mock data + localStorage persistence
+---
 
-## Included Scope
+## Технологи
 
-- Public home page
-- Public complaint form
-- Station list and station detail pages
-- Dispatcher dashboard
-- Engineer dashboard
-- Brigade leader mobile page
-- Admin management page
-- Mock login and role-based redirect
+| Хэсэг | Технологи |
+|-------|-----------|
+| Frontend | Vanilla HTML, CSS, JavaScript (ES Modules) |
+| Backend | Node.js, Express.js, TypeScript |
+| Database | PostgreSQL |
+| Auth | JWT (JSON Web Token) |
 
-## Not Included
+---
 
-- Driver features
-- Tank filling / sav duurgelt
-- Water delivery vehicle logic
-- Citizen login/register
-- ERP / HR / finance / inventory modules
-- Backend integration
+## Хавтасны бүтэц
 
-## Mock Accounts
+```
+darkhan-us-suvag-repair-app/
+├── frontend/               # Вэб хуудсууд
+│   ├── index.html          # Нүүр хуудас (нийтийн)
+│   ├── stations.html       # Ус түгээх байрны жагсаалт
+│   ├── station.html        # Байрны дэлгэрэнгүй
+│   ├── complaint.html      # Гомдол илгээх хуудас
+│   ├── login.html          # Нэвтрэх хуудас
+│   ├── dispatcher.html     # Диспетчерийн хяналтын самбар
+│   ├── engineer.html       # Инженерийн хяналтын самбар
+│   ├── brigade.html        # Бригадын ахлагчийн хуудас
+│   ├── admin.html          # Админ удирдлагын хуудас
+│   ├── reports.html        # Тайлан
+│   └── assets/
+│       ├── css/style.css   # Бүх хуудсын загвар
+│       └── js/
+│           ├── api.js      # Backend API дуудлагууд
+│           ├── auth.js     # Нэвтрэлт, JWT хадгалалт
+│           ├── utils.js    # Туслах функцүүд
+│           ├── seed.js     # Тогтмол утгууд (статус, төрөл гэх мэт)
+│           └── pages/      # Хуудас бүрийн JS файлууд
+├── backend/
+│   ├── src/
+│   │   ├── server.ts       # Серверийн эхлэл
+│   │   ├── app.ts          # Express тохиргоо, route бүртгэл
+│   │   ├── db.ts           # PostgreSQL холболт
+│   │   ├── middleware/
+│   │   │   └── auth.middleware.ts  # JWT шалгалт
+│   │   └── routes/
+│   │       ├── auth.routes.ts      # Нэвтрэх /api/auth
+│   │       ├── station.routes.ts   # Байрны мэдээлэл /api/stations
+│   │       ├── ticket.routes.ts    # Дуудлага /api/tickets
+│   │       ├── task.routes.ts      # Ажлын төлөвлөгөө /api/tasks
+│   │       ├── complaint.routes.ts # Гомдол /api/complaints
+│   │       ├── report.routes.ts    # Тайлан /api/reports
+│   │       ├── meta.routes.ts      # Алба, бригад, хэрэглэгч /api/meta
+│   │       └── admin.routes.ts     # Админ CRUD /api/admin
+│   └── database/
+│       └── schema.sql      # Хүснэгтүүд + анхны өгөгдөл
+```
 
-- `admin / admin123`
-- `dispatcher / dispatch123`
-- `chief / chief123`
-- `eng1 / eng123`
-- `bat / bat123`
+---
 
-Additional seeded brigade leaders:
+## API Endpoints
 
-- `dorj / dorj123`
-- `oyun / oyun123`
+| Method | URL | Тайлбар |
+|--------|-----|---------|
+| POST | `/api/auth/login` | Нэвтрэх |
+| GET | `/api/stations` | Байрны жагсаалт |
+| GET | `/api/stations/:id` | Байрны дэлгэрэнгүй |
+| GET | `/api/tickets` | Дуудлагын жагсаалт |
+| POST | `/api/tickets` | Шинэ дуудлага үүсгэх |
+| PATCH | `/api/tickets/:id/assign` | Дуудлага хуваарилах |
+| PATCH | `/api/tickets/:id/start` | Ажил эхлэх |
+| PATCH | `/api/tickets/:id/finish` | Ажил дуусгах |
+| GET | `/api/tasks` | Төлөвлөгөөт ажлын жагсаалт |
+| POST | `/api/tasks` | Шинэ ажил үүсгэх |
+| POST | `/api/complaints` | Гомдол илгээх |
+| GET | `/api/meta` | Алба, бригад, хэрэглэгч (нэвтэрсэн) |
+| GET | `/api/reports` | Тайлан |
 
-## Run Locally
+---
+
+## Хэрэглэгчийн үүргүүд
+
+| Username | Нууц үг | Үүрэг |
+|----------|---------|-------|
+| admin | admin123 | Систем админ — бүх тохиргоо |
+| dispatcher | dispatch123 | Диспетчер — дуудлага хүлээн авах, хуваарилах |
+| chief | chief123 | Ерөнхий инженер — бүх ажлыг хянах |
+| eng1 | eng123 | Хэлтсийн инженер — өөрийн хэлтсийн ажил |
+| bat | bat123 | Бригадын ахлагч — бригадын ажил |
+| dorj | dorj123 | Бригадын ахлагч |
+| oyun | oyun123 | Бригадын ахлагч |
+
+---
+
+## Суулгаж ажиллуулах
+
+### 1. PostgreSQL database үүсгэх
+
+```sql
+CREATE DATABASE darkhan_us_suvag;
+```
+
+### 2. Схем болон өгөгдөл оруулах
 
 ```bash
+psql -U postgres -d darkhan_us_suvag -f backend/database/schema.sql
+```
+
+### 3. Backend тохиргоо
+
+`backend/.env` файл үүсгэж дараах мөрүүдийг бичих:
+
+```env
+PORT=4000
+DATABASE_URL=postgresql://postgres:НУУЦ_ҮГ@localhost:5432/darkhan_us_suvag
+JWT_SECRET=өөрийн_нууц_түлхүүр
+```
+
+### 4. Backend суулгаж эхлүүлэх
+
+```bash
+cd backend
 npm install
-npm run dev
-```
-
-Then open the local Vite URL shown in the terminal.
-
-## Open On Phone Over The Same Wi-Fi
-
-Start the dev server:
-
-```bash
-npm run dev
-```
-
-Explicit LAN binding also works:
-
-```bash
-npm run dev -- --host
-```
-
-Optional custom port:
-
-```bash
-npm run dev -- --host --port 5173
-```
-
-Find your computer's local IP address on Windows:
-
-```powershell
-ipconfig
-```
-
-Look for the active Wi-Fi adapter and copy its `IPv4 Address`, for example `192.168.1.23`.
-
-Open this on your phone while both devices are on the same Wi-Fi:
-
-```text
-http://<local-ip>:5173
-```
-
-Example:
-
-```text
-http://192.168.1.23:5173
-```
-
-Notes:
-
-- Your phone and computer must be on the same local network.
-- Windows Firewall may ask to allow Node.js access. Allow it on private networks.
-- If the port is changed, use that same port on the phone URL.
-
-## Build
-
-```bash
 npm run build
+node dist/server.js
 ```
 
-## Preview Build Over LAN
+Сервер `http://localhost:4000` дээр ажиллана.
 
-Recommended for phone testing if `npm run dev` feels slow or freezes on mobile.
+### 5. Хөтчөөс нээх
 
-```bash
-npm run build
-npm run preview:lan
+```
+http://localhost:4000
 ```
 
-Then open:
+---
 
-```text
-http://<local-ip>:4173
-```
+## Өгөгдлийн сан
 
-You can still run preview manually:
-
-```bash
-npm run preview
-npm run preview -- --host --port 4173
-```
-
-You can also use:
-
-```bash
-npm run dev:lan
-```
-
-Notes:
-
-- `dev` mode includes HMR and development transforms, so some phones may feel laggy.
-- `preview` serves the built app and is usually much more stable on phones.
-
-## Data Notes
-
-- All app data is mocked in the frontend.
-- State is persisted in browser `localStorage`.
-- Refreshing the page keeps changes until local storage is cleared.
-- The structure is separated so it can be replaced later with Supabase or PostgreSQL backed APIs.
-
-## Folder Overview
-
-```text
-src/
-  app/              # shared app state and auth context
-  components/       # reusable UI, form, layout, station components
-  data/             # mock seed data
-  lib/              # utilities and business helpers
-  pages/
-    internal/       # dispatcher, engineer, brigade, admin
-    public/         # home, complaint, stations, station detail
-  routes/           # route guards
-  types.ts          # shared frontend models
-```
+- **water_stations** — 330 ус түгээх байр (15 баг × 22 байр)
+- **users** — 7 хэрэглэгч
+- **departments** — 4 алба
+- **teams** — 3 засварын бригад
+- **tickets** — дуудлагын бүртгэл
+- **tasks** — төлөвлөгөөт ажлын бүртгэл
+- **complaints** — иргэдийн гомдлын бүртгэл
