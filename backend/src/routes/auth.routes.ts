@@ -1,12 +1,23 @@
 import bcrypt from "bcrypt";
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
 import { query } from "../db";
 import { requireAuth } from "../middleware/auth.middleware";
 
+const JWT_SECRET = process.env.JWT_SECRET!;
+
 const router = Router();
 
-router.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: "Хэт олон оролдлого. 15 минутын дараа дахин оролдоно уу." },
+});
+
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body as { username: string; password: string };
     if (!username || !password) {
@@ -41,7 +52,7 @@ router.post("/login", async (req, res) => {
       departmentId: user.department_id ?? undefined,
       teamId: user.team_id ?? undefined,
     };
-    const token = jwt.sign(payload, process.env.JWT_SECRET || "secret", { expiresIn: "8h" });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
       ok: true,
@@ -101,7 +112,6 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
-// PATCH /api/auth/setup-profile — анх нэвтрэхэд профайл тохируулах
 router.patch("/setup-profile", requireAuth, async (req, res) => {
   try {
     const { email, phone, newPassword } = req.body as {

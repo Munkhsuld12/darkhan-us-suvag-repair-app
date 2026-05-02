@@ -1,11 +1,9 @@
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import { query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
-
-const createId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
 const toTask = (row: Record<string, unknown>) => ({
   id: row.id,
@@ -24,7 +22,6 @@ const toTask = (row: Record<string, unknown>) => ({
   createdAt: row.created_at,
 });
 
-// GET /api/tasks
 router.get("/", requireAuth, async (req, res) => {
   try {
     const user = req.user!;
@@ -48,7 +45,6 @@ router.get("/", requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/tasks
 router.post("/", requireAuth, requireRole("admin", "general_engineer", "department_engineer"), async (req, res) => {
   try {
     const { stationId, teamId, departmentId, createdBy, description, taskDate } = req.body as {
@@ -61,7 +57,7 @@ router.post("/", requireAuth, requireRole("admin", "general_engineer", "departme
       return;
     }
 
-    const id = createId("task");
+    const id = randomUUID();
     const now = new Date().toISOString();
 
     await query(
@@ -76,7 +72,6 @@ router.post("/", requireAuth, requireRole("admin", "general_engineer", "departme
   }
 });
 
-// PATCH /api/tasks/:id/start
 router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (req, res) => {
   try {
     const { id } = req.params;
@@ -92,13 +87,13 @@ router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (re
   }
 });
 
-// PATCH /api/tasks/:id/finish
 router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (req, res) => {
   try {
     const { id } = req.params;
     const { reportDescription, materialsUsed } = req.body as {
       reportDescription: string; materialsUsed?: string;
     };
+    const userTeamId = req.user!.teamId;
     const now = new Date().toISOString();
 
     const taskRes = await query<{ team_id: string; started_at: string | null }>(
@@ -109,6 +104,10 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
       res.status(404).json({ ok: false, message: "Ажил олдсонгүй" });
       return;
     }
+    if (task.team_id !== userTeamId) {
+      res.status(403).json({ ok: false, message: "Энэ ажил таны бригадад хуваарилагдаагүй" });
+      return;
+    }
 
     await query(
       "UPDATE tasks SET status='done', finished_at=$1, started_at=COALESCE(started_at,$1), work_report=$2 WHERE id=$3",
@@ -116,7 +115,7 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
     );
     await query(
       "INSERT INTO maintenance_logs (id, task_id, team_id, description, materials_used, started_at, finished_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [createId("ml"), id, task.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", task.started_at || now, now, now]
+      [randomUUID(), id, task.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", task.started_at || now, now, now]
     );
 
     res.json({ ok: true });

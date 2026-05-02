@@ -14,6 +14,8 @@
 | Backend | Node.js, Express.js, TypeScript |
 | Database | PostgreSQL |
 | Auth | JWT (JSON Web Token) |
+| Аюулгүй байдал | helmet, express-rate-limit, bcrypt |
+| Docker | Multi-stage build (node:20-alpine) |
 
 ---
 
@@ -135,15 +137,20 @@ psql -U postgres -d darkhan_us_suvag -f backend/database/schema.sql
 
 ### 3. Backend тохиргоо
 
-`backend/.env` файл үүсгэж дараах мөрүүдийг бичих:
+`backend/.env.example`-ийг хуулж `backend/.env` болгон нэрийг өөрчилж, утгуудыг бөглөнө:
+
+```bash
+cp backend/.env.example backend/.env
+```
 
 ```env
 PORT=4000
 DATABASE_URL=postgresql://postgres:НУУЦ_ҮГ@localhost:5432/darkhan_us_suvag
-JWT_SECRET=өөрийн_нууц_түлхүүр
+JWT_SECRET=өөрийн_урт_нууц_түлхүүр
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-### 5. Backend суулгаж эхлүүлэх
+### 4. Backend суулгаж эхлүүлэх
 
 ```bash
 cd backend
@@ -153,6 +160,14 @@ node dist/server.js
 ```
 
 Сервер `http://localhost:4000` дээр ажиллана.
+
+### 5. Docker ашиглах (сонголтоор)
+
+```bash
+cd backend
+docker build -t darkhan-us-suvag-backend .
+docker run -p 4000:4000 --env-file .env darkhan-us-suvag-backend
+```
 
 ### 6. Хөтчөөс нээх
 

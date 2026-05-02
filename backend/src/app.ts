@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import path from "path";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
@@ -12,11 +13,15 @@ import ticketRoutes from "./routes/ticket.routes";
 
 const app = express();
 
-app.use(cors({ origin: "*", credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : ["http://localhost:3000"];
 
-// API routes
+app.use(helmet());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, message: "Backend is running", timestamp: new Date().toISOString() });
 });
@@ -30,11 +35,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/meta", metaRoutes);
 app.use("/api/stations", stationRoutes);
 
-// Serve vanilla frontend static files
 const frontendPath = path.resolve(__dirname, "../../frontend");
 app.use(express.static(frontendPath));
 
-// SPA fallback — serve index.html for non-API routes
 app.get(/^(?!\/api).*/, (_req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });

@@ -1,11 +1,9 @@
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import { query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
-
-const createId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
 const generateTicketNo = async () => {
   const now = new Date();
@@ -47,7 +45,6 @@ const toTicket = (row: Record<string, unknown>) => ({
   finishedAt: row.finished_at ?? undefined,
 });
 
-// GET /api/tickets
 router.get("/", requireAuth, async (req, res) => {
   try {
     const user = req.user!;
@@ -71,7 +68,6 @@ router.get("/", requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/tickets
 router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, res) => {
   try {
     const { complaintId, stationId, departmentId, teamId, issueType, description, priority, source, createdBy } =
@@ -85,7 +81,7 @@ router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, re
       return;
     }
 
-    const id = createId("ticket");
+    const id = randomUUID();
     const ticketNo = await generateTicketNo();
     const status = buildStatus(priority || "normal", Boolean(teamId));
     const now = new Date().toISOString();
@@ -100,13 +96,13 @@ router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, re
 
     await query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [createId("tl"), id, createdBy, "Засварын хүсэлт үүсгэсэн", `${ticketNo} дугаартай засварын хүсэлт бүртгэлээ.`, now]
+      [randomUUID(), id, createdBy, "Засварын хүсэлт үүсгэсэн", `${ticketNo} дугаартай засварын хүсэлт бүртгэлээ.`, now]
     );
 
     if (teamId && departmentId) {
       await query(
         "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-        [createId("tl"), id, createdBy, "Багт хуваарилсан", "Шинэ засварын хүсэлтийг бригад руу хуваарилсан.", now]
+        [randomUUID(), id, createdBy, "Багт хуваарилсан", "Шинэ засварын хүсэлтийг бригад руу хуваарилсан.", now]
       );
     }
 
@@ -121,7 +117,6 @@ router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, re
   }
 });
 
-// PATCH /api/tickets/:id/assign
 router.patch("/:id/assign", requireAuth, requireRole("admin", "dispatcher"), async (req, res) => {
   try {
     const { id } = req.params;
@@ -138,13 +133,13 @@ router.patch("/:id/assign", requireAuth, requireRole("admin", "dispatcher"), asy
 
     await query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [createId("tl"), id, assignedBy, "Хуваарилалт шинэчилсэн", "Засварын хүсэлтийн хуваарилалт шинэчлэгдлээ.", now]
+      [randomUUID(), id, assignedBy, "Хуваарилалт шинэчилсэн", "Засварын хүсэлтийн хуваарилалт шинэчлэгдлээ.", now]
     );
 
     if (priority === "urgent") {
       await query(
         "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-        [createId("tl"), id, assignedBy, "Яаралтай болгосон", "Засварын хүсэлтийг яаралтай ангилалд орууллаа.", now]
+        [randomUUID(), id, assignedBy, "Яаралтай болгосон", "Засварын хүсэлтийг яаралтай ангилалд орууллаа.", now]
       );
     }
 
@@ -155,12 +150,25 @@ router.patch("/:id/assign", requireAuth, requireRole("admin", "dispatcher"), asy
   }
 });
 
-// PATCH /api/tickets/:id/start
 router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
+    const userTeamId = req.user!.teamId;
     const now = new Date().toISOString();
+
+    const ticketRes = await query<{ team_id: string }>(
+      "SELECT team_id FROM tickets WHERE id = $1", [id]
+    );
+    const ticket = ticketRes.rows[0];
+    if (!ticket) {
+      res.status(404).json({ ok: false, message: "Засварын хүсэлт олдсонгүй" });
+      return;
+    }
+    if (ticket.team_id !== userTeamId) {
+      res.status(403).json({ ok: false, message: "Энэ засварын хүсэлт таны бригадад хуваарилагдаагүй" });
+      return;
+    }
 
     await query(
       "UPDATE tickets SET status='in_progress', started_at=COALESCE(started_at,$1) WHERE id=$2",
@@ -168,7 +176,7 @@ router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (re
     );
     await query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [createId("tl"), id, userId, "Ажил эхэлсэн", "Ажил эхлүүлэв.", now]
+      [randomUUID(), id, userId, "Ажил эхэлсэн", "Ажил эхлүүлэв.", now]
     );
 
     res.json({ ok: true });
@@ -178,7 +186,6 @@ router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (re
   }
 });
 
-// PATCH /api/tickets/:id/finish
 router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (req, res) => {
   try {
     const { id } = req.params;
@@ -186,6 +193,7 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
       reportDescription: string; materialsUsed?: string; workerIds?: string[];
     };
     const userId = req.user!.id;
+    const userTeamId = req.user!.teamId;
     const now = new Date().toISOString();
 
     const ticketRes = await query<{ team_id: string; started_at: string | null }>(
@@ -196,6 +204,10 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
       res.status(404).json({ ok: false, message: "Засварын хүсэлт олдсонгүй" });
       return;
     }
+    if (ticket.team_id !== userTeamId) {
+      res.status(403).json({ ok: false, message: "Энэ засварын хүсэлт таны бригадад хуваарилагдаагүй" });
+      return;
+    }
 
     await query(
       "UPDATE tickets SET status='done', finished_at=$1, started_at=COALESCE(started_at,$1) WHERE id=$2",
@@ -203,18 +215,18 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
     );
     await query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [createId("tl"), id, userId, "Ажил дууссан", reportDescription, now]
+      [randomUUID(), id, userId, "Ажил дууссан", reportDescription, now]
     );
     await query(
       "INSERT INTO maintenance_logs (id, ticket_id, team_id, description, materials_used, started_at, finished_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [createId("ml"), id, ticket.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", ticket.started_at || now, now, now]
+      [randomUUID(), id, ticket.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", ticket.started_at || now, now, now]
     );
 
     await query("DELETE FROM ticket_workers WHERE ticket_id = $1", [id]);
     for (const workerId of workerIds ?? []) {
       await query(
         "INSERT INTO ticket_workers (id, ticket_id, user_id) VALUES ($1,$2,$3)",
-        [createId("tw"), id, workerId]
+        [randomUUID(), id, workerId]
       );
     }
 

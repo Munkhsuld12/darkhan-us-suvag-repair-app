@@ -1,13 +1,10 @@
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import { query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
 
-const createId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-
-// GET /api/complaints
 router.get("/", requireAuth, requireRole("admin", "dispatcher"), async (_req, res) => {
   try {
     const result = await query<Record<string, unknown>>(`
@@ -40,7 +37,6 @@ router.get("/", requireAuth, requireRole("admin", "dispatcher"), async (_req, re
   }
 });
 
-// POST /api/complaints (public — no auth required)
 router.post("/", async (req, res) => {
   try {
     const {
@@ -56,7 +52,7 @@ router.post("/", async (req, res) => {
       return;
     }
 
-    const id = createId("complaint");
+    const id = randomUUID();
     const now = new Date().toISOString();
 
     await query(

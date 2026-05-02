@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import { query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
@@ -6,10 +7,6 @@ import { requireAuth, requireRole } from "../middleware/auth.middleware";
 const router = Router();
 router.use(requireAuth, requireRole("admin"));
 
-const createId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-
-// GET /api/admin/meta — fetch all master data in one request
 router.get("/meta", async (_req, res) => {
   try {
     const [depts, teams, users, stations] = await Promise.all([
@@ -45,7 +42,7 @@ router.post("/departments", async (req, res) => {
   try {
     const { id, name } = req.body as { id?: string; name: string };
     if (!name?.trim()) { res.status(400).json({ ok: false, message: "Нэрийг оруулна уу" }); return; }
-    const newId = id?.trim() || createId("dept");
+    const newId = id?.trim() || randomUUID();
     await query(
       "INSERT INTO departments (id, name) VALUES ($1,$2) ON CONFLICT (id) DO UPDATE SET name=$2",
       [newId, name.trim()]
@@ -71,6 +68,14 @@ router.put("/departments/:id", async (req, res) => {
 
 router.delete("/departments/:id", async (req, res) => {
   try {
+    const active = await query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM tickets WHERE department_id=$1 AND status != 'done'",
+      [req.params.id]
+    );
+    if (Number(active.rows[0]?.count) > 0) {
+      res.status(409).json({ ok: false, message: "Энэ албанд идэвхтэй засварын хүсэлт байгаа тул устгах боломжгүй" });
+      return;
+    }
     await query("DELETE FROM departments WHERE id=$1", [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
@@ -88,7 +93,7 @@ router.post("/teams", async (req, res) => {
     if (!name?.trim() || !departmentId || !leaderUserId) {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" }); return;
     }
-    const newId = id?.trim() || createId("team");
+    const newId = id?.trim() || randomUUID();
     await query(
       "INSERT INTO teams (id, name, department_id, leader_user_id) VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO UPDATE SET name=$2, department_id=$3, leader_user_id=$4",
       [newId, name.trim(), departmentId, leaderUserId]
@@ -118,6 +123,22 @@ router.put("/teams/:id", async (req, res) => {
 
 router.delete("/teams/:id", async (req, res) => {
   try {
+    const activeTickets = await query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM tickets WHERE team_id=$1 AND status != 'done'",
+      [req.params.id]
+    );
+    if (Number(activeTickets.rows[0]?.count) > 0) {
+      res.status(409).json({ ok: false, message: "Энэ бригадад идэвхтэй засварын хүсэлт байгаа тул устгах боломжгүй" });
+      return;
+    }
+    const activeTasks = await query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM tasks WHERE team_id=$1 AND status != 'done'",
+      [req.params.id]
+    );
+    if (Number(activeTasks.rows[0]?.count) > 0) {
+      res.status(409).json({ ok: false, message: "Энэ бригадад идэвхтэй төлөвлөгөөт ажил байгаа тул устгах боломжгүй" });
+      return;
+    }
     await query("DELETE FROM teams WHERE id=$1", [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
@@ -137,7 +158,7 @@ router.post("/users", async (req, res) => {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" }); return;
     }
     const hash = await bcrypt.hash(password, 10);
-    const newId = id?.trim() || createId("user");
+    const newId = id?.trim() || randomUUID();
     await query(
       `INSERT INTO users (id, full_name, username, password_hash, role, department_id, team_id, phone, profile_complete)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false)
@@ -196,7 +217,7 @@ router.post("/stations", async (req, res) => {
     if (!code?.trim() || !bagNo) {
       res.status(400).json({ ok: false, message: "Код болон баг дугаарыг оруулна уу" }); return;
     }
-    const newId = id?.trim() || createId("station");
+    const newId = id?.trim() || randomUUID();
     await query(
       `INSERT INTO water_stations (id, code, name, bag_no, location, caretaker_name, caretaker_phone)
        VALUES ($1,$2,$3,$4,$5,$6,$7)

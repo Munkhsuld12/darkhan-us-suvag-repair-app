@@ -1,6 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined in backend/.env");
+}
+
 export interface JwtPayload {
   id: string;
   role: string;
@@ -25,7 +30,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as JwtPayload;
+    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
     req.user = payload;
     next();
   } catch {
