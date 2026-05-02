@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { Router } from "express";
-import { query } from "../db";
+import { pool, query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -88,40 +88,55 @@ router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (re
 });
 
 router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reportDescription, materialsUsed } = req.body as {
-      reportDescription: string; materialsUsed?: string;
-    };
-    const userTeamId = req.user!.teamId;
-    const now = new Date().toISOString();
+  const { id } = req.params;
+  const { reportDescription, materialsUsed } = req.body as {
+    reportDescription: string; materialsUsed?: string;
+  };
+  const userTeamId = req.user!.teamId;
+  const now = new Date().toISOString();
 
-    const taskRes = await query<{ team_id: string; started_at: string | null }>(
-      "SELECT team_id, started_at FROM tasks WHERE id = $1", [id]
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const taskRes = await client.query<{ team_id: string; started_at: string | null; status: string }>(
+      "SELECT team_id, started_at, status FROM tasks WHERE id = $1 FOR UPDATE", [id]
     );
     const task = taskRes.rows[0];
     if (!task) {
+      await client.query("ROLLBACK");
       res.status(404).json({ ok: false, message: "Ажил олдсонгүй" });
       return;
     }
     if (task.team_id !== userTeamId) {
+      await client.query("ROLLBACK");
       res.status(403).json({ ok: false, message: "Энэ ажил таны бригадад хуваарилагдаагүй" });
       return;
     }
+    // Idempotent: аль хэдийн дуусгасан бол давхар maintenance_log үүсгэхгүй
+    if (task.status === "done") {
+      await client.query("ROLLBACK");
+      res.json({ ok: true });
+      return;
+    }
 
-    await query(
+    await client.query(
       "UPDATE tasks SET status='done', finished_at=$1, started_at=COALESCE(started_at,$1), work_report=$2 WHERE id=$3",
       [now, reportDescription, id]
     );
-    await query(
+    await client.query(
       "INSERT INTO maintenance_logs (id, task_id, team_id, description, materials_used, started_at, finished_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
       [randomUUID(), id, task.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", task.started_at || now, now, now]
     );
 
+    await client.query("COMMIT");
     res.json({ ok: true });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Finish task error:", err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });
+  } finally {
+    client.release();
   }
 });
 

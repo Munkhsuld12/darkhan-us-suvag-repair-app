@@ -1,10 +1,12 @@
 import dotenv from "dotenv";
+import { pool, testDbConnection } from "./db"; // dotenv.config() db.ts-д эхлүүлнэ → JWT_SECRET/DATABASE_URL бэлэн болно
 import app from "./app";
-import { pool, testDbConnection } from "./db";
 
-dotenv.config();
+dotenv.config(); // db.ts аль хэдийн дуудсан ч redundant байх нь дээр
 
-const port = Number(process.env.PORT || 4000);
+const portEnv = process.env.PORT;
+const port = portEnv ? parseInt(portEnv, 10) : 4000;
+if (isNaN(port)) throw new Error(`PORT env буруу утга: "${portEnv}"`);
 
 const startServer = async () => {
   try {

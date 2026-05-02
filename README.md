@@ -14,7 +14,7 @@
 | Backend | Node.js, Express.js, TypeScript |
 | Database | PostgreSQL |
 | Auth | JWT (JSON Web Token) |
-| Аюулгүй байдал | helmet, express-rate-limit, bcrypt |
+| Аюулгүй байдал | helmet, express-rate-limit, bcrypt, pg advisory lock |
 | Docker | Multi-stage build (node:20-alpine) |
 
 ---

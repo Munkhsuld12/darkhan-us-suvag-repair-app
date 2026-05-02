@@ -27,7 +27,9 @@ export const isAuthenticated = () => {
   if (!token) return false;
   // Quick expiry check via JWT payload (no signature verify)
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    // JWT uses base64url (RFC 4648 §5): replace - → + and _ → / for atob()
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
     return payload.exp * 1000 > Date.now();
   } catch { return false; }
 };

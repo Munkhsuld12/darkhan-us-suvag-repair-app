@@ -1,18 +1,24 @@
 import { randomUUID } from "crypto";
+import type { PoolClient } from "pg";
 import { Router } from "express";
-import { query } from "../db";
+import { pool, query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
 
-const generateTicketNo = async () => {
+// Advisory lock key — serializes ticket number generation across concurrent requests
+const TICKET_NO_LOCK = 1_234_567_890;
+
+const generateTicketNo = async (client: PoolClient): Promise<string> => {
   const now = new Date();
   const datePart = [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, "0"),
     String(now.getDate()).padStart(2, "0"),
   ].join("");
-  const countResult = await query<{ count: string }>(
+  // Transaction-level advisory lock: released automatically at COMMIT/ROLLBACK
+  await client.query("SELECT pg_advisory_xact_lock($1)", [TICKET_NO_LOCK]);
+  const countResult = await client.query<{ count: string }>(
     "SELECT COUNT(*) AS count FROM tickets WHERE ticket_no LIKE $1",
     [`TKT-${datePart}-%`]
   );
@@ -69,51 +75,66 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { complaintId, stationId, departmentId, teamId, issueType, description, priority, source, createdBy } =
-      req.body as {
-        complaintId?: string; stationId: string; departmentId?: string; teamId?: string;
-        issueType: string; description: string; priority: string; source: string; createdBy: string;
-      };
+    const {
+      complaintId, stationId, departmentId, teamId,
+      issueType, description, priority, source, createdBy,
+    } = req.body as {
+      complaintId?: string; stationId: string; departmentId?: string; teamId?: string;
+      issueType: string; description: string; priority: string; source: string; createdBy: string;
+    };
 
     if (!stationId || !issueType || !source) {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" });
       return;
     }
 
+    await client.query("BEGIN");
+
     const id = randomUUID();
-    const ticketNo = await generateTicketNo();
+    const ticketNo = await generateTicketNo(client);
     const status = buildStatus(priority || "normal", Boolean(teamId));
     const now = new Date().toISOString();
 
-    await query(
-      `INSERT INTO tickets (id, complaint_id, ticket_no, station_id, department_id, team_id, issue_type, description, priority, status, source, created_by, assigned_by, assigned_at, created_at)
+    await client.query(
+      `INSERT INTO tickets
+         (id, complaint_id, ticket_no, station_id, department_id, team_id,
+          issue_type, description, priority, status, source,
+          created_by, assigned_by, assigned_at, created_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-      [id, complaintId || null, ticketNo, stationId, departmentId || null, teamId || null,
+      [
+        id, complaintId || null, ticketNo, stationId,
+        departmentId || null, teamId || null,
         issueType, description || "", priority || "normal", status, source,
-        createdBy, teamId ? createdBy : null, teamId ? now : null, now]
+        createdBy, teamId ? createdBy : null, teamId ? now : null, now,
+      ]
     );
 
-    await query(
+    await client.query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
       [randomUUID(), id, createdBy, "Засварын хүсэлт үүсгэсэн", `${ticketNo} дугаартай засварын хүсэлт бүртгэлээ.`, now]
     );
 
     if (teamId && departmentId) {
-      await query(
+      await client.query(
         "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
         [randomUUID(), id, createdBy, "Багт хуваарилсан", "Шинэ засварын хүсэлтийг бригад руу хуваарилсан.", now]
       );
     }
 
     if (complaintId) {
-      await query("UPDATE complaints SET status = 'converted' WHERE id = $1", [complaintId]);
+      await client.query("UPDATE complaints SET status = 'converted' WHERE id = $1", [complaintId]);
     }
 
+    await client.query("COMMIT");
     res.status(201).json({ ok: true, id, ticketNo });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Create ticket error:", err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });
+  } finally {
+    client.release();
   }
 });
 
@@ -187,53 +208,71 @@ router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (re
 });
 
 router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reportDescription, materialsUsed, workerIds } = req.body as {
-      reportDescription: string; materialsUsed?: string; workerIds?: string[];
-    };
-    const userId = req.user!.id;
-    const userTeamId = req.user!.teamId;
-    const now = new Date().toISOString();
+  const { id } = req.params;
+  const { reportDescription, materialsUsed, workerIds } = req.body as {
+    reportDescription: string; materialsUsed?: string; workerIds?: string[];
+  };
+  const userId = req.user!.id;
+  const userTeamId = req.user!.teamId;
+  const now = new Date().toISOString();
 
-    const ticketRes = await query<{ team_id: string; started_at: string | null }>(
-      "SELECT team_id, started_at FROM tickets WHERE id = $1", [id]
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // FOR UPDATE: давхцсан хүсэлтийн нэг нь хүлээнэ, хоёр дахь нь status='done' харна
+    const ticketRes = await client.query<{ team_id: string; started_at: string | null; status: string }>(
+      "SELECT team_id, started_at, status FROM tickets WHERE id = $1 FOR UPDATE",
+      [id]
     );
     const ticket = ticketRes.rows[0];
+
     if (!ticket) {
+      await client.query("ROLLBACK");
       res.status(404).json({ ok: false, message: "Засварын хүсэлт олдсонгүй" });
       return;
     }
     if (ticket.team_id !== userTeamId) {
+      await client.query("ROLLBACK");
       res.status(403).json({ ok: false, message: "Энэ засварын хүсэлт таны бригадад хуваарилагдаагүй" });
       return;
     }
+    // Idempotent: аль хэдийн дуусгасан бол давхар maintenance_log үүсгэхгүй
+    if (ticket.status === "done") {
+      await client.query("ROLLBACK");
+      res.json({ ok: true });
+      return;
+    }
 
-    await query(
+    await client.query(
       "UPDATE tickets SET status='done', finished_at=$1, started_at=COALESCE(started_at,$1) WHERE id=$2",
       [now, id]
     );
-    await query(
+    await client.query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",
       [randomUUID(), id, userId, "Ажил дууссан", reportDescription, now]
     );
-    await query(
+    await client.query(
       "INSERT INTO maintenance_logs (id, ticket_id, team_id, description, materials_used, started_at, finished_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
       [randomUUID(), id, ticket.team_id, reportDescription, materialsUsed || "Материал тэмдэглээгүй", ticket.started_at || now, now, now]
     );
 
-    await query("DELETE FROM ticket_workers WHERE ticket_id = $1", [id]);
+    await client.query("DELETE FROM ticket_workers WHERE ticket_id = $1", [id]);
     for (const workerId of workerIds ?? []) {
-      await query(
+      await client.query(
         "INSERT INTO ticket_workers (id, ticket_id, user_id) VALUES ($1,$2,$3)",
         [randomUUID(), id, workerId]
       );
     }
 
+    await client.query("COMMIT");
     res.json({ ok: true });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Finish ticket error:", err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });
+  } finally {
+    client.release();
   }
 });
 

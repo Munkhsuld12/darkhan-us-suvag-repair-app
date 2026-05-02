@@ -20,7 +20,12 @@ const handle = async (res) => {
     if (!isPublicPage()) window.location.href = "/login.html";
     throw new Error("Нэвтрэх шаардлагатай");
   }
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Серверийн хариу буруу формат (HTTP ${res.status})`);
+  }
   if (!data.ok && !res.ok) {
     throw new Error(data.message || `HTTP ${res.status}`);
   }

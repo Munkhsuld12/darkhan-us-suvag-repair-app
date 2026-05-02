@@ -166,7 +166,11 @@ router.post("/users", async (req, res) => {
       [newId, fullName.trim(), username.trim(), hash, role, departmentId || null, teamId || null, phone || ""]
     );
     res.json({ ok: true, id: newId });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === "23505") {
+      res.status(409).json({ ok: false, message: "Энэ нэвтрэх нэр аль хэдийн бүртгэлтэй байна" });
+      return;
+    }
     console.error(err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });
   }
@@ -191,7 +195,11 @@ router.put("/users/:id", async (req, res) => {
       );
     }
     res.json({ ok: true });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === "23505") {
+      res.status(409).json({ ok: false, message: "Энэ нэвтрэх нэр аль хэдийн бүртгэлтэй байна" });
+      return;
+    }
     console.error(err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });
   }
