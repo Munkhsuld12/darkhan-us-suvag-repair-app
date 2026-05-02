@@ -256,7 +256,9 @@ function setupLoginModal() {
         document.getElementById("lm-password").value,
       );
       setSession(data.token, data.user);
-      window.location.href = getRoleRedirect(data.user.role);
+      window.location.href = data.user.profileComplete === false
+        ? "/profile-setup.html"
+        : getRoleRedirect(data.user.role);
     } catch (err) {
       errEl.textContent = err.message || "Нэвтрэх нэр эсвэл нууц үг буруу";
       errEl.style.display = "";

@@ -21,43 +21,44 @@
 
 ```
 darkhan-us-suvag-repair-app/
-├── frontend/               # Вэб хуудсууд
-│   ├── index.html          # Нүүр хуудас (нийтийн)
-│   ├── stations.html       # Ус түгээх байрны жагсаалт
-│   ├── station.html        # Байрны дэлгэрэнгүй
-│   ├── complaint.html      # Гомдол илгээх хуудас
-│   ├── login.html          # Нэвтрэх хуудас
-│   ├── dispatcher.html     # Диспетчерийн хяналтын самбар
-│   ├── engineer.html       # Инженерийн хяналтын самбар
-│   ├── brigade.html        # Бригадын ахлагчийн хуудас
-│   ├── admin.html          # Админ удирдлагын хуудас
-│   ├── reports.html        # Тайлан
+├── frontend/                    # Вэб хуудсууд
+│   ├── index.html               # Нүүр хуудас (нийтийн)
+│   ├── stations.html            # Ус түгээх байрны жагсаалт
+│   ├── station.html             # Байрны дэлгэрэнгүй
+│   ├── complaint.html           # Гомдол илгээх хуудас
+│   ├── login.html               # Нэвтрэх хуудас
+│   ├── profile-setup.html       # Анхны нэвтрэлтийн профайл тохируулах
+│   ├── dispatcher.html          # Диспетчерийн хяналтын самбар
+│   ├── engineer.html            # Инженерийн хяналтын самбар
+│   ├── brigade.html             # Бригадын ахлагчийн хуудас
+│   ├── admin.html               # Админ удирдлагын хуудас
+│   ├── reports.html             # Тайлан
 │   └── assets/
-│       ├── css/style.css   # Бүх хуудсын загвар
+│       ├── css/style.css        # Бүх хуудсын загвар
 │       └── js/
-│           ├── api.js      # Backend API дуудлагууд
-│           ├── auth.js     # Нэвтрэлт, JWT хадгалалт
-│           ├── utils.js    # Туслах функцүүд
-│           ├── seed.js     # Тогтмол утгууд (статус, төрөл гэх мэт)
-│           └── pages/      # Хуудас бүрийн JS файлууд
+│           ├── api.js           # Backend API дуудлагууд
+│           ├── auth.js          # Нэвтрэлт, JWT хадгалалт
+│           ├── utils.js         # Туслах функцүүд
+│           ├── seed.js          # Тогтмол утгууд (статус, төрөл гэх мэт)
+│           └── pages/           # Хуудас бүрийн JS файлууд
 ├── backend/
 │   ├── src/
-│   │   ├── server.ts       # Серверийн эхлэл
-│   │   ├── app.ts          # Express тохиргоо, route бүртгэл
-│   │   ├── db.ts           # PostgreSQL холболт
+│   │   ├── server.ts            # Серверийн эхлэл
+│   │   ├── app.ts               # Express тохиргоо, route бүртгэл
+│   │   ├── db.ts                # PostgreSQL холболт
 │   │   ├── middleware/
-│   │   │   └── auth.middleware.ts  # JWT шалгалт
+│   │   │   └── auth.middleware.ts   # JWT шалгалт
 │   │   └── routes/
-│   │       ├── auth.routes.ts      # Нэвтрэх /api/auth
-│   │       ├── station.routes.ts   # Байрны мэдээлэл /api/stations
-│   │       ├── ticket.routes.ts    # Дуудлага /api/tickets
-│   │       ├── task.routes.ts      # Ажлын төлөвлөгөө /api/tasks
-│   │       ├── complaint.routes.ts # Гомдол /api/complaints
-│   │       ├── report.routes.ts    # Тайлан /api/reports
-│   │       ├── meta.routes.ts      # Алба, бригад, хэрэглэгч /api/meta
-│   │       └── admin.routes.ts     # Админ CRUD /api/admin
+│   │       ├── auth.routes.ts       # Нэвтрэх /api/auth
+│   │       ├── station.routes.ts    # Байрны мэдээлэл /api/stations
+│   │       ├── ticket.routes.ts     # Дуудлага /api/tickets
+│   │       ├── task.routes.ts       # Ажлын төлөвлөгөө /api/tasks
+│   │       ├── complaint.routes.ts  # Гомдол /api/complaints
+│   │       ├── report.routes.ts     # Тайлан /api/reports
+│   │       ├── meta.routes.ts       # Алба, бригад, хэрэглэгч /api/meta
+│   │       └── admin.routes.ts      # Админ CRUD /api/admin
 │   └── database/
-│       └── schema.sql      # Хүснэгтүүд + анхны өгөгдөл
+│       └── schema.sql           # Хүснэгтүүд + анхны өгөгдөл
 ```
 
 ---
@@ -67,6 +68,8 @@ darkhan-us-suvag-repair-app/
 | Method | URL | Тайлбар |
 |--------|-----|---------|
 | POST | `/api/auth/login` | Нэвтрэх |
+| GET | `/api/auth/me` | Нэвтэрсэн хэрэглэгчийн мэдээлэл |
+| PATCH | `/api/auth/setup-profile` | Анхны нэвтрэлтийн профайл тохируулах |
 | GET | `/api/stations` | Байрны жагсаалт |
 | GET | `/api/stations/:id` | Байрны дэлгэрэнгүй |
 | GET | `/api/tickets` | Дуудлагын жагсаалт |
@@ -96,6 +99,26 @@ darkhan-us-suvag-repair-app/
 
 ---
 
+## Анхны нэвтрэлтийн урсгал
+
+Admin шинэ хэрэглэгч үүсгэхэд тухайн хэрэглэгч анх нэвтрэхдээ профайл тохируулах хуудас руу автоматаар шилждэг.
+
+```
+Admin → шинэ хэрэглэгч үүсгэнэ
+  ↓
+Хэрэглэгч нэвтрэнэ (admin өгсөн нууц үгээр)
+  ↓
+/profile-setup.html руу автоматаар шилжинэ
+  ↓
+И-мэйл, утас, шинэ нууц үг оруулна
+  ↓
+Өөрийн dashboard руу орно
+```
+
+`users` хүснэгтэд `profile_complete` болон `email` талбар нэмэгдсэн. Admin үүсгэсэн хэрэглэгч `profile_complete = false` утгатай эхэлнэ.
+
+---
+
 ## Суулгаж ажиллуулах
 
 ### 1. PostgreSQL database үүсгэх
@@ -110,7 +133,15 @@ CREATE DATABASE darkhan_us_suvag;
 psql -U postgres -d darkhan_us_suvag -f backend/database/schema.sql
 ```
 
-### 3. Backend тохиргоо
+### 3. Database migration (хэрэв schema.sql-ээс хойш нэмэгдсэн талбарууд)
+
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN NOT NULL DEFAULT false;
+UPDATE users SET profile_complete = true;
+```
+
+### 4. Backend тохиргоо
 
 `backend/.env` файл үүсгэж дараах мөрүүдийг бичих:
 
@@ -120,7 +151,7 @@ DATABASE_URL=postgresql://postgres:НУУЦ_ҮГ@localhost:5432/darkhan_us_suvag
 JWT_SECRET=өөрийн_нууц_түлхүүр
 ```
 
-### 4. Backend суулгаж эхлүүлэх
+### 5. Backend суулгаж эхлүүлэх
 
 ```bash
 cd backend
@@ -131,7 +162,7 @@ node dist/server.js
 
 Сервер `http://localhost:4000` дээр ажиллана.
 
-### 5. Хөтчөөс нээх
+### 6. Хөтчөөс нээх
 
 ```
 http://localhost:4000
@@ -141,10 +172,12 @@ http://localhost:4000
 
 ## Өгөгдлийн сан
 
-- **water_stations** — 330 ус түгээх байр (15 баг × 22 байр)
-- **users** — 7 хэрэглэгч
-- **departments** — 4 алба
-- **teams** — 3 засварын бригад
-- **tickets** — дуудлагын бүртгэл
-- **tasks** — төлөвлөгөөт ажлын бүртгэл
-- **complaints** — иргэдийн гомдлын бүртгэл
+| Хүснэгт | Тайлбар |
+|---------|---------|
+| `water_stations` | 330 ус түгээх байр (15 баг × 22 байр) |
+| `users` | Дотоод хэрэглэгчид (email, phone, profile_complete талбартай) |
+| `departments` | 4 алба |
+| `teams` | 3 засварын бригад |
+| `tickets` | Дуудлагын бүртгэл |
+| `tasks` | Төлөвлөгөөт ажлын бүртгэл |
+| `complaints` | Иргэдийн гомдлын бүртгэл |

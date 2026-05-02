@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профайл тохируулах — Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="pub-header">
+    <div class="pub-header-wrap">
+      <div class="pub-header-card">
+        <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
+          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="login-page">
+    <div class="login-card" style="max-width:480px">
+      <div style="margin-bottom:24px">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:12px;background:var(--brand-50);margin-bottom:12px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <p class="login-heading-sub">Анхны нэвтрэлт</p>
+        <h2 class="login-heading">Профайл тохируулах</h2>
+        <p style="font-size:14px;color:var(--slate-500);margin-top:8px">Системд бүртгэгдсэн тул өөрийн мэдээллээ оруулна уу. Дараагийн нэвтрэлтэд шинэ нууц үгээ ашиглана.</p>
+      </div>
+
+      <form id="setup-form" class="field-grid">
+        <div class="field">
+          <label for="sp-email">И-мэйл хаяг <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-email" type="email" class="input" placeholder="example@gmail.com" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="sp-phone">Утасны дугаар <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-phone" type="tel" class="input" placeholder="9900 0000" required autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="sp-password">Шинэ нууц үг <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-password" type="password" class="input" placeholder="Хамгийн багадаа 6 тэмдэгт" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="sp-confirm">Нууц үг давтах <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-confirm" type="password" class="input" placeholder="Нууц үгээ давтан оруулна уу" required autocomplete="new-password">
+        </div>
+        <p id="sp-error" class="error-msg" style="display:none"></p>
+        <button id="sp-submit" type="submit" class="btn btn-primary btn-full btn-lg">Хадгалаад нэвтрэх</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/profile-setup.js"></script>
+</body>
+</html>

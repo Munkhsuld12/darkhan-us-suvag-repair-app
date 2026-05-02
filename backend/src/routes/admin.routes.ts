@@ -139,8 +139,8 @@ router.post("/users", async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     const newId = id?.trim() || createId("user");
     await query(
-      `INSERT INTO users (id, full_name, username, password_hash, role, department_id, team_id, phone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      `INSERT INTO users (id, full_name, username, password_hash, role, department_id, team_id, phone, profile_complete)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false)
        ON CONFLICT (id) DO UPDATE SET full_name=$2, username=$3, password_hash=$4, role=$5, department_id=$6, team_id=$7, phone=$8`,
       [newId, fullName.trim(), username.trim(), hash, role, departmentId || null, teamId || null, phone || ""]
     );

@@ -1,11 +1,16 @@
 import { login as apiLogin } from "../api.js";
-import { isAuthenticated, setSession, getRoleRedirect } from "../auth.js";
+import { isAuthenticated, setSession, getRoleRedirect, getUser } from "../auth.js";
 import { el } from "../utils.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   if (isAuthenticated()) {
-    const user = JSON.parse(localStorage.getItem("dhs_user") || "null");
-    if (user) { window.location.href = getRoleRedirect(user.role); return; }
+    const user = getUser();
+    if (user) {
+      window.location.href = user.profileComplete === false
+        ? "/profile-setup.html"
+        : getRoleRedirect(user.role);
+      return;
+    }
   }
 
   const form   = el("login-form");
@@ -21,7 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const data = await apiLogin(el("username").value.trim(), el("password").value);
       setSession(data.token, data.user);
-      window.location.href = "/app.html";
+      window.location.href = data.user.profileComplete === false
+        ? "/profile-setup.html"
+        : "/app.html";
     } catch (err) {
       errEl.textContent = err.message || "Нэвтрэх нэр эсвэл нууц үг буруу";
       btnEl.disabled = false;
