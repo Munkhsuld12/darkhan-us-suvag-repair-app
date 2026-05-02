@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(50) NOT NULL CHECK (role IN ('admin','dispatcher','general_engineer','department_engineer','brigade_leader')),
   department_id VARCHAR(100) REFERENCES departments(id) ON DELETE SET NULL,
   team_id VARCHAR(100) REFERENCES teams(id) ON DELETE SET NULL,
-  phone VARCHAR(30)
+  phone VARCHAR(30),
+  email VARCHAR(255),
+  profile_complete BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Water stations
@@ -160,14 +162,14 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Users (passwords are bcrypt hashes)
 -- admin/admin123, dispatcher/dispatch123, chief/chief123, eng1/eng123, bat/bat123, dorj/dorj123, oyun/oyun123
-INSERT INTO users (id, full_name, username, password_hash, role, department_id, team_id, phone) VALUES
-  ('user-admin',      'Систем админ',                    'admin',      '$2b$10$jKCsUuLX3mibVm3.oTMs0Oltb1KQnsMb9VQw3.12MAc/P2ASvbU6W', 'admin',               NULL,           NULL,     '99001122'),
-  ('user-dispatcher', 'Диспетчер Мөнхцэцэг',             'dispatcher', '$2b$10$MgF/FolXiuMzIcmjNAu1eeG8Zp0KAKTWTYFAg6EqGFS0flq0EvcCO', 'dispatcher',          'dept-water',   NULL,     '99112233'),
-  ('user-chief',      'Ерөнхий инженер Энхтөр',          'chief',      '$2b$10$.XIZEdtUMPKqB0SI1YR04.MFAMH/.19SFh1e2kGSbr1/5.URoxlx2', 'general_engineer',    'dept-water',   NULL,     '99223344'),
-  ('user-eng1',       'Хэлтсийн инженер Оюунчимэг',      'eng1',       '$2b$10$safsPI.1JvNmKTpiP5/Q3.I6SsXJaT4yNrdBdd4se193vif9PmJ8.', 'department_engineer', 'dept-water',   NULL,     '99334455'),
-  ('user-bat',        'Бат',                              'bat',        '$2b$10$nkZ37JrbZ8hJCGOdxDcJK.zw.ZpqxLJZrdgQM/VrI5.hXJUG67LIG', 'brigade_leader',      'dept-water',   'team-1', '99445566'),
-  ('user-dorj',       'Дорж',                            'dorj',       '$2b$10$zRtIdFtKY3fSRAmm2B2SqukW4fI.Wk0DAxo53DhrlWEBwUObzeD7u', 'brigade_leader',      'dept-water',   'team-2', '99556677'),
-  ('user-oyun',       'Оюун',                            'oyun',       '$2b$10$ZGrRSbII3AsQdJHz2UwdvOd/yoNANlw7hdNtQE4oWgeEz3jiKqoYe', 'brigade_leader',      'dept-housing', 'team-3', '99667788')
+INSERT INTO users (id, full_name, username, password_hash, role, department_id, team_id, phone, profile_complete) VALUES
+  ('user-admin',      'Систем админ',                    'admin',      '$2b$10$jKCsUuLX3mibVm3.oTMs0Oltb1KQnsMb9VQw3.12MAc/P2ASvbU6W', 'admin',               NULL,           NULL,     '99001122', true),
+  ('user-dispatcher', 'Диспетчер Мөнхцэцэг',             'dispatcher', '$2b$10$MgF/FolXiuMzIcmjNAu1eeG8Zp0KAKTWTYFAg6EqGFS0flq0EvcCO', 'dispatcher',          'dept-water',   NULL,     '99112233', true),
+  ('user-chief',      'Ерөнхий инженер Энхтөр',          'chief',      '$2b$10$.XIZEdtUMPKqB0SI1YR04.MFAMH/.19SFh1e2kGSbr1/5.URoxlx2', 'general_engineer',    'dept-water',   NULL,     '99223344', true),
+  ('user-eng1',       'Хэлтсийн инженер Оюунчимэг',      'eng1',       '$2b$10$safsPI.1JvNmKTpiP5/Q3.I6SsXJaT4yNrdBdd4se193vif9PmJ8.', 'department_engineer', 'dept-water',   NULL,     '99334455', true),
+  ('user-bat',        'Бат',                              'bat',        '$2b$10$nkZ37JrbZ8hJCGOdxDcJK.zw.ZpqxLJZrdgQM/VrI5.hXJUG67LIG', 'brigade_leader',      'dept-water',   'team-1', '99445566', true),
+  ('user-dorj',       'Дорж',                            'dorj',       '$2b$10$zRtIdFtKY3fSRAmm2B2SqukW4fI.Wk0DAxo53DhrlWEBwUObzeD7u', 'brigade_leader',      'dept-water',   'team-2', '99556677', true),
+  ('user-oyun',       'Оюун',                            'oyun',       '$2b$10$ZGrRSbII3AsQdJHz2UwdvOd/yoNANlw7hdNtQE4oWgeEz3jiKqoYe', 'brigade_leader',      'dept-housing', 'team-3', '99667788', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Water stations (15 bags x 22 stations = 330 stations)

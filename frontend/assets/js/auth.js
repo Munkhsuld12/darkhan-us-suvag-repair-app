@@ -37,7 +37,12 @@ export const requireAuth = () => {
     window.location.href = "/login.html";
     return null;
   }
-  return getUser();
+  const user = getUser();
+  if (user && user.profileComplete === false) {
+    window.location.href = "/profile-setup.html";
+    return null;
+  }
+  return user;
 };
 
 export const logout = () => {

@@ -133,15 +133,7 @@ CREATE DATABASE darkhan_us_suvag;
 psql -U postgres -d darkhan_us_suvag -f backend/database/schema.sql
 ```
 
-### 3. Database migration (хэрэв schema.sql-ээс хойш нэмэгдсэн талбарууд)
-
-```sql
-ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN NOT NULL DEFAULT false;
-UPDATE users SET profile_complete = true;
-```
-
-### 4. Backend тохиргоо
+### 3. Backend тохиргоо
 
 `backend/.env` файл үүсгэж дараах мөрүүдийг бичих:
 
