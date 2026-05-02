@@ -15,6 +15,7 @@
         var user = raw ? JSON.parse(raw) : null;
         var token = localStorage.getItem("dhs_token");
         if (!user || !token) { window.location.replace("/login.html"); return; }
+        if (user.profileComplete === false) { window.location.replace("/profile-setup.html"); return; }
         var map = {
           dispatcher:           "/dispatcher.html",
           general_engineer:     "/engineer.html",
