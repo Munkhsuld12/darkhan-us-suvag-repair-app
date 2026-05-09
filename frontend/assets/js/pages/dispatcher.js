@@ -67,12 +67,16 @@ function renderWorkload() {
     const leader = state.users.find((u) => u.id === team.leaderUserId)?.fullName ?? "Хуваарилагдаагүй";
     const busy   = count >= 3;
     return `
-      <div class="workload-card ${busy ? "busy" : "free"}">
+      <div class="workload-card ${busy ? "busy" : "free"}" style="cursor:pointer" data-team-id="${team.id}">
         <p class="workload-name">${escapeHtml(team.name)}</p>
         <p class="workload-leader">${escapeHtml(leader)}</p>
         <p class="workload-count">${count >= 1 ? `${count} ажил` : "Чөлөөтэй"}</p>
       </div>`;
   }).join("");
+
+  el("workload-grid").querySelectorAll("[data-team-id]").forEach((card) => {
+    card.addEventListener("click", () => openTeamDetailModal(card.dataset.teamId));
+  });
 }
 
 function renderComplaints() {
@@ -360,5 +364,55 @@ document.addEventListener("DOMContentLoaded", () => {
 function closeModals() {
   el("ticket-modal")?.classList.add("hidden");
   el("assign-modal")?.classList.add("hidden");
+  el("team-detail-modal")?.classList.add("hidden");
   currentComplaint = null;
+}
+
+function openTeamDetailModal(teamId) {
+  const team   = state.teams.find((t) => t.id === teamId);
+  if (!team) return;
+  const leader = state.users.find((u) => u.id === team.leaderUserId)?.fullName ?? "Ахлагч тогтоогүй";
+
+  const tickets = state.tickets.filter((t) => t.teamId === teamId && t.status !== "done");
+  const tasks   = state.tasks.filter((t) => t.teamId === teamId && t.status !== "done");
+
+  el("tdm-title").textContent  = team.name;
+  el("tdm-leader").textContent = leader;
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString("mn-MN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+
+  const ticketHtml = tickets.length
+    ? tickets.map((t) => `
+      <div class="item-card" style="padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--slate-500)">Засварын хүсэлт</span>
+          ${statusBadge(t.status)}
+          ${t.priority === "urgent" ? `<span class="badge badge-urgent">Яаралтай</span>` : ""}
+        </div>
+        <p style="font-weight:600;font-size:14px;margin-top:4px">${escapeHtml(getStationLabel(t.stationId, state.waterStations))} · ${escapeHtml(t.issueType)}</p>
+        <p style="font-size:12px;color:var(--slate-500);margin-top:2px">${escapeHtml(t.ticketNo)} · ${fmt(t.assignedAt ?? t.createdAt)}</p>
+      </div>`).join("")
+    : `<p class="empty-state" style="padding:12px">Засварын хүсэлт байхгүй</p>`;
+
+  const taskHtml = tasks.length
+    ? tasks.map((t) => `
+      <div class="item-card" style="padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--slate-500)">Ажлын даалгавар</span>
+          ${statusBadge(t.status)}
+        </div>
+        <p style="font-weight:600;font-size:14px;margin-top:4px">${escapeHtml(getStationLabel(t.stationId, state.waterStations))} · ${escapeHtml(t.description)}</p>
+        <p style="font-size:12px;color:var(--slate-500);margin-top:2px">Огноо: ${escapeHtml(t.taskDate)}</p>
+      </div>`).join("")
+    : `<p class="empty-state" style="padding:12px">Ажлын даалгавар байхгүй</p>`;
+
+  el("tdm-body").innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400)">Засварын хүсэлт (${tickets.length})</p>
+      ${ticketHtml}
+      <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin-top:8px">Ажлын даалгавар (${tasks.length})</p>
+      ${taskHtml}
+    </div>`;
+
+  el("team-detail-modal").classList.remove("hidden");
 }
