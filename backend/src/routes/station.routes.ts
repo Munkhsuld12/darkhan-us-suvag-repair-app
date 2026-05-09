@@ -7,7 +7,7 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const { bag, search } = req.query as { bag?: string; search?: string };
-    let sql = "SELECT id, code, name, bag_no, location, caretaker_name, caretaker_phone FROM water_stations WHERE 1=1";
+    let sql = "SELECT id, code, name, bag_no, location, caretaker_name, caretaker_phone FROM water_stations WHERE deleted_at IS NULL";
     const params: unknown[] = [];
     let pi = 1;
 

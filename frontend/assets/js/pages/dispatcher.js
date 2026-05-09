@@ -1,5 +1,6 @@
 import * as api from "../api.js";
 import { requireAuth } from "../auth.js";
+import { setupSidebar } from "../sidebar.js";
 import { issueTypeOptions } from "../seed.js";
 import {
   formatDateTime, statusBadge, sourceBadge, getStationLabel,
@@ -10,6 +11,7 @@ import {
 let state = { complaints: [], tickets: [], teams: [], departments: [], users: [], waterStations: [], tasks: [] };
 
 document.addEventListener("DOMContentLoaded", async () => {
+  setupSidebar();
   const user = requireAuth();
   if (!user) return;
 

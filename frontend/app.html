@@ -7,29 +7,7 @@
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-  <script>
-    // Role-based redirect — runs synchronously before DOMContentLoaded
-    (function () {
-      try {
-        var raw = localStorage.getItem("dhs_user");
-        var user = raw ? JSON.parse(raw) : null;
-        var token = localStorage.getItem("dhs_token");
-        if (!user || !token) { window.location.replace("/login.html"); return; }
-        if (user.profileComplete === false) { window.location.replace("/profile-setup.html"); return; }
-        var map = {
-          dispatcher:           "/dispatcher.html",
-          general_engineer:     "/engineer.html",
-          department_engineer:  "/engineer.html",
-          brigade_leader:       "/brigade.html",
-          admin:                "/admin.html",
-        };
-        var dest = map[user.role] || "/login.html";
-        window.location.replace(dest);
-      } catch (e) {
-        window.location.replace("/login.html");
-      }
-    })();
-  </script>
+  <script src="/assets/js/pages/app.js"></script>
   <noscript>
     <p style="text-align:center;padding:48px;font-family:sans-serif">
       JavaScript шаардлагатай. Хөтчийнхөө тохиргоонд JS-ийг идэвхжүүлнэ үү.

@@ -15,7 +15,7 @@ const app = express();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:3000"];
+  : ["http://localhost:3000", "http://localhost:5173"];
 
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins, credentials: true }));

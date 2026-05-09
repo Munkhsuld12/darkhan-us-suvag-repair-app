@@ -1,5 +1,6 @@
-import { requireAuth } from "../auth.js";
+import { requireAuth, getUser } from "../auth.js";
 import { getStations, getTickets, getTasks, getAdminMeta } from "../api.js";
+import { setupSidebar } from "../sidebar.js";
 import {
   el, emptyState, spinner, escapeHtml, statusBadge, matchesStationSearch, getStatusMeta, getDeptName, getTeamName
 } from "../utils.js";
@@ -254,7 +255,20 @@ async function init() {
   });
 }
 
+const ROLE_MAP = {
+  dispatcher:          "/dispatcher.html",
+  general_engineer:    "/engineer.html",
+  department_engineer: "/engineer.html",
+  brigade_leader:      "/brigade.html",
+  admin:               "/admin.html",
+};
+
 document.addEventListener("DOMContentLoaded", () => {
+  setupSidebar();
+  const u = getUser();
+  const link = document.getElementById("dashboard-link");
+  if (link && u) link.href = ROLE_MAP[u.role] || "/app.html";
+
   init().catch(err => {
     console.error(err);
     const wrap = el("station-table-wrap");

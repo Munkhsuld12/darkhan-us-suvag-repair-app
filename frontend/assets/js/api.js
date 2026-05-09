@@ -17,7 +17,7 @@ const isPublicPage = () => PUBLIC_PAGES.some((p) => window.location.pathname ===
 const handle = async (res) => {
   if (res.status === 401) {
     clearSession();
-    if (!isPublicPage()) window.location.href = "/login.html";
+    if (!isPublicPage()) window.location.href = "/?login=1";
     throw new Error("Нэвтрэх шаардлагатай");
   }
   let data;
@@ -82,6 +82,14 @@ export const deleteUser = (id) => del(`/api/admin/users/${id}`);
 export const upsertStation = (body) => post("/api/admin/stations", body);
 export const updateStation = (id, body) => put(`/api/admin/stations/${id}`, body);
 export const deleteStation = (id) => del(`/api/admin/stations/${id}`);
+
+// ── Admin Archive & Audit ──
+export const getArchive   = () => get("/api/admin/archive");
+export const getAuditLogs = () => get("/api/admin/audit-logs");
+export const restoreDepartment = (id) => post(`/api/admin/departments/${id}/restore`, {});
+export const restoreTeam       = (id) => post(`/api/admin/teams/${id}/restore`, {});
+export const restoreUser       = (id) => post(`/api/admin/users/${id}/restore`, {});
+export const restoreStation    = (id) => post(`/api/admin/stations/${id}/restore`, {});
 
 // ── Public Stations ──
 export const getStations = (params = {}) => {

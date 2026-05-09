@@ -234,14 +234,18 @@ function setupLoginModal() {
   closeBtn.addEventListener("click", closeModal);
   modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+  if (new URLSearchParams(window.location.search).get("login") === "1") openModal();
 
-  // Wire up demo account buttons
-  modal.querySelectorAll(".demo-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.getElementById("lm-username").value = btn.dataset.username;
-      document.getElementById("lm-password").value = btn.dataset.password;
-      errEl.style.display = "none";
-    });
+  document.getElementById("lm-toggle-password")?.addEventListener("click", () => {
+    const pwd = document.getElementById("lm-password");
+    const icon = document.getElementById("lm-eye-icon");
+    if (pwd.type === "password") {
+      pwd.type = "text";
+      icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+    } else {
+      pwd.type = "password";
+      icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    }
   });
 
   form.addEventListener("submit", async (e) => {
@@ -285,18 +289,74 @@ function setupComplaintModal() {
     issueSel.appendChild(o);
   });
 
-  // Populate station datalist
-  const dl = document.getElementById("c-station-datalist");
-  state.stations.forEach((s) => {
-    const o = document.createElement("option");
-    o.value = getStationOptionLabel(s);
-    dl.appendChild(o);
+  // Station combobox
+  let selectedStation = null;
+  const stationInput = document.getElementById("c-station");
+  const stationDrop  = document.getElementById("c-station-dropdown");
+
+  const attachDropdownHandlers = () => {
+    stationDrop.querySelectorAll(".station-dropdown-item").forEach((item) => {
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        selectedStation = state.stations.find((x) => x.id === item.dataset.id);
+        stationInput.value = selectedStation.code;
+        stationDrop.classList.add("hidden");
+      });
+    });
+  };
+
+  const showGrouped = () => {
+    const bags = [...new Set(state.stations.map((s) => s.bagNo))].sort((a, b) => a - b);
+    stationDrop.innerHTML = bags.map((bag) => {
+      const list = state.stations
+        .filter((s) => s.bagNo === bag)
+        .sort((a, b) => Number(a.code.split("-")[1]) - Number(b.code.split("-")[1]));
+      return `<div class="station-dropdown-group">${bag}-р баг</div>` +
+        list.map((s) => `
+          <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
+            <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+          </div>`).join("");
+    }).join("");
+    attachDropdownHandlers();
+    stationDrop.classList.remove("hidden");
+  };
+
+  stationInput.addEventListener("input", () => {
+    selectedStation = null;
+    const q = stationInput.value.trim().toLowerCase();
+    if (!q) { showGrouped(); return; }
+    const matches = state.stations
+      .filter((s) => s.code.toLowerCase().includes(q) || (s.location ?? "").toLowerCase().includes(q))
+      .sort((a, b) => {
+        const ac = a.code.toLowerCase(), bc = b.code.toLowerCase();
+        const ap = ac.startsWith(q + "-") ? 0 : 1;
+        const bp = bc.startsWith(q + "-") ? 0 : 1;
+        return ap - bp || ac.localeCompare(bc);
+      })
+      .slice(0, 15);
+    stationDrop.innerHTML = matches.length
+      ? matches.map((s) => `
+          <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
+            <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+          </div>`).join("")
+      : `<div class="station-dropdown-empty">Тохирох байр олдсонгүй</div>`;
+    attachDropdownHandlers();
+    stationDrop.classList.remove("hidden");
+  });
+  stationInput.addEventListener("blur",  () => setTimeout(() => stationDrop.classList.add("hidden"), 150));
+  stationInput.addEventListener("focus", () => {
+    if (stationInput.value.trim()) stationInput.dispatchEvent(new Event("input"));
+    else showGrouped();
   });
 
   const openModal = () => {
     modal.style.display = "flex";
     document.body.style.overflow = "hidden";
     form.reset();
+    selectedStation = null;
+    stationDrop.classList.add("hidden");
     errEl.style.display = "none";
     succEl.classList.add("hidden");
   };
@@ -316,13 +376,12 @@ function setupComplaintModal() {
     errEl.style.display = "none";
     succEl.classList.add("hidden");
 
-    const q = document.getElementById("c-station").value.trim().toLowerCase();
-    const station = state.stations.find((s) =>
-      s.code.toLowerCase() === q || getStationOptionLabel(s).toLowerCase() === q
-    );
+    const station = selectedStation ||
+      state.stations.find((s) => s.code.toLowerCase() === stationInput.value.trim().toLowerCase());
     if (!station) {
-      errEl.textContent = "Ус түгээх байрны кодыг зөв оруулна уу";
+      errEl.textContent = "Жагсаалтаас ус түгээх байр сонгоно уу";
       errEl.style.display = "";
+      stationInput.focus();
       return;
     }
 

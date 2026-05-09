@@ -1,5 +1,6 @@
 import * as api from "../api.js";
-import { requireAuth } from "../auth.js";
+import { requireAuth, getUser } from "../auth.js";
+import { setupSidebar } from "../sidebar.js";
 import { reportTypeLabels, sourceLabels, complaintStatusLabels, priorityLabels, statusLabels } from "../seed.js";
 import {
   formatDateTime, formatDate, statusBadge, getStationLabel, getStationOptionLabel,
@@ -27,7 +28,20 @@ let priorityFilter   = "all";
 const today = new Date().toISOString().slice(0, 10);
 const defaultFrom = `${today.slice(0, 7)}-01`;
 
+const ROLE_MAP = {
+  dispatcher:          "/dispatcher.html",
+  general_engineer:    "/engineer.html",
+  department_engineer: "/engineer.html",
+  brigade_leader:      "/brigade.html",
+  admin:               "/admin.html",
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
+  setupSidebar();
+  const u = getUser();
+  const link = document.getElementById("dashboard-link");
+  if (link && u) link.href = ROLE_MAP[u.role] || "/app.html";
+
   user = requireAuth();
   if (!user) return;
 

@@ -1,5 +1,6 @@
 import * as api from "../api.js";
 import { requireAuth } from "../auth.js";
+import { setupSidebar } from "../sidebar.js";
 import {
   formatDateTime, formatDate, statusBadge, getStationLabel, getStationOptionLabel,
   getDeptName, getTeamName, isTaskDelayed, todayStr, emptyState, escapeHtml, el,
@@ -11,6 +12,7 @@ let deptFilter = "all";
 let taskStationId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  setupSidebar();
   user = requireAuth();
   if (!user) return;
 

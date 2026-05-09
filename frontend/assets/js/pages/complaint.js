@@ -1,9 +1,10 @@
 import { getStations, submitComplaint } from "../api.js";
 import { issueTypeOptions } from "../seed.js";
-import { getStationOptionLabel, el } from "../utils.js";
+import { escapeHtml, el } from "../utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   let stations = [];
+  let selectedStation = null;
 
   // Populate issue types
   const issueSelect = el("issueType");
@@ -13,36 +14,86 @@ document.addEventListener("DOMContentLoaded", async () => {
     issueSelect.appendChild(o);
   });
 
-  // Load stations for datalist
+  // Load stations
   try {
     const data = await getStations();
     stations = data.stations;
-    const dl = el("station-datalist");
-    stations.forEach((s) => {
-      const opt = document.createElement("option");
-      opt.value = getStationOptionLabel(s);
-      dl.appendChild(opt);
-    });
   } catch { /* ignore */ }
 
-  const form      = el("complaint-form");
-  const errEl     = el("complaint-error");
-  const successEl = el("complaint-success");
+  const form         = el("complaint-form");
+  const errEl        = el("complaint-error");
+  const successEl    = el("complaint-success");
   const stationInput = el("stationQuery");
+  const stationDrop  = el("station-dropdown");
+
+  const attachHandlers = () => {
+    stationDrop.querySelectorAll(".station-dropdown-item").forEach((item) => {
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        selectedStation = stations.find((x) => x.id === item.dataset.id);
+        stationInput.value = selectedStation.code;
+        stationDrop.classList.add("hidden");
+      });
+    });
+  };
+
+  const showGrouped = () => {
+    const bags = [...new Set(stations.map((s) => s.bagNo))].sort((a, b) => a - b);
+    stationDrop.innerHTML = bags.map((bag) => {
+      const list = stations
+        .filter((s) => s.bagNo === bag)
+        .sort((a, b) => Number(a.code.split("-")[1]) - Number(b.code.split("-")[1]));
+      return `<div class="station-dropdown-group">${bag}-р баг</div>` +
+        list.map((s) => `
+          <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
+            <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+          </div>`).join("");
+    }).join("");
+    attachHandlers();
+    stationDrop.classList.remove("hidden");
+  };
+
+  stationInput.addEventListener("input", () => {
+    selectedStation = null;
+    const q = stationInput.value.trim().toLowerCase();
+    if (!q) { showGrouped(); return; }
+    const matches = stations
+      .filter((s) => s.code.toLowerCase().includes(q) || (s.location ?? "").toLowerCase().includes(q))
+      .sort((a, b) => {
+        const ac = a.code.toLowerCase(), bc = b.code.toLowerCase();
+        const ap = ac.startsWith(q + "-") ? 0 : 1;
+        const bp = bc.startsWith(q + "-") ? 0 : 1;
+        return ap - bp || ac.localeCompare(bc);
+      })
+      .slice(0, 15);
+    stationDrop.innerHTML = matches.length
+      ? matches.map((s) => `
+          <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
+            <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+          </div>`).join("")
+      : `<div class="station-dropdown-empty">Тохирох байр олдсонгүй</div>`;
+    attachHandlers();
+    stationDrop.classList.remove("hidden");
+  });
+  stationInput.addEventListener("blur",  () => setTimeout(() => stationDrop.classList.add("hidden"), 150));
+  stationInput.addEventListener("focus", () => {
+    if (stationInput.value.trim()) stationInput.dispatchEvent(new Event("input"));
+    else showGrouped();
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errEl.textContent = "";
     successEl.classList.add("hidden");
 
-    const query = stationInput.value.trim().toLowerCase();
-    const station = stations.find(
-      (s) => s.code.toLowerCase() === query ||
-             getStationOptionLabel(s).toLowerCase() === query
-    );
+    const station = selectedStation ||
+      stations.find((s) => s.code.toLowerCase() === stationInput.value.trim().toLowerCase());
 
     if (!station) {
-      errEl.textContent = "Ус түгээх байрыг кодоор оруулна уу (жишээ: 1-5)";
+      errEl.textContent = "Жагсаалтаас ус түгээх байр сонгоно уу";
+      stationInput.focus();
       return;
     }
 

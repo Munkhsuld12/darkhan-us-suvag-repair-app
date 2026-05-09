@@ -13,7 +13,7 @@
         <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
           <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
         </a>
-        <a href="/login.html" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</a>
+        <a href="/?login=1" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</a>
       </div>
     </div>
   </header>
@@ -32,18 +32,12 @@
     <div class="card">
       <form id="complaint-form" class="field-grid">
         <div class="field">
-          <label for="stationQuery">Ус түгээх байрын код</label>
-          <input
-            id="stationQuery"
-            type="text"
-            class="input"
-            list="station-datalist"
-            placeholder="Жишээ: 1-5"
-            required
-            autocomplete="off"
-          >
-          <datalist id="station-datalist"></datalist>
-          <span class="field-hint">Кодоор хайна уу (жишээ: 1-5, 3-12)</span>
+          <label for="stationQuery">Ус түгээх байрны код</label>
+          <div class="station-combobox">
+            <input id="stationQuery" type="text" class="input" placeholder="Код эсвэл байршилаар хайх…" autocomplete="off">
+            <div id="station-dropdown" class="station-dropdown hidden"></div>
+          </div>
+          <span class="field-hint">Код эсвэл байршилаар хайна уу (жишээ: 1-5, цэцэрлэг)</span>
         </div>
 
         <div class="field">

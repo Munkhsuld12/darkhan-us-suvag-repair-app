@@ -30,7 +30,7 @@ router.post("/login", loginLimiter, async (req, res) => {
       role: string; department_id: string | null; team_id: string | null;
       phone: string; email: string | null; profile_complete: boolean;
     }>(
-      "SELECT id, full_name, username, password_hash, role, department_id, team_id, phone, email, profile_complete FROM users WHERE username = $1",
+      "SELECT id, full_name, username, password_hash, role, department_id, team_id, phone, email, profile_complete FROM users WHERE username = $1 AND deleted_at IS NULL",
       [username.trim()]
     );
 
@@ -115,11 +115,11 @@ router.get("/me", requireAuth, async (req, res) => {
 router.patch("/setup-profile", requireAuth, async (req, res) => {
   try {
     const { email, phone, newPassword } = req.body as {
-      email: string; phone: string; newPassword: string;
+      email?: string; phone: string; newPassword: string;
     };
 
-    if (!email?.trim() || !phone?.trim() || !newPassword?.trim()) {
-      res.status(400).json({ ok: false, message: "Бүх талбарыг бөглөнө үү" });
+    if (!phone?.trim() || !newPassword?.trim()) {
+      res.status(400).json({ ok: false, message: "Утас болон нууц үгийг оруулна уу" });
       return;
     }
     if (newPassword.length < 6) {
@@ -130,7 +130,7 @@ router.patch("/setup-profile", requireAuth, async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 10);
     await query(
       "UPDATE users SET email=$1, phone=$2, password_hash=$3, profile_complete=true WHERE id=$4",
-      [email.trim(), phone.trim(), hash, req.user!.id]
+      [email?.trim() || null, phone.trim(), hash, req.user!.id]
     );
 
     res.json({ ok: true });

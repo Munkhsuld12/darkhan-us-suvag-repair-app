@@ -36,7 +36,7 @@ export const isAuthenticated = () => {
 
 export const requireAuth = () => {
   if (!isAuthenticated()) {
-    window.location.href = "/login.html";
+    window.location.href = "/?login=1";
     return null;
   }
   const user = getUser();
@@ -49,7 +49,7 @@ export const requireAuth = () => {
 
 export const logout = () => {
   clearSession();
-  window.location.href = "/login.html";
+  window.location.href = "/?login=1";
 };
 
 export const getRoleRedirect = (role) => {
@@ -59,6 +59,6 @@ export const getRoleRedirect = (role) => {
     case "department_engineer": return "/app.html";
     case "brigade_leader":      return "/app.html";
     case "admin":               return "/app.html";
-    default:                    return "/login.html";
+    default:                    return "/?login=1";
   }
 };

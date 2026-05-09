@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ус түгээх байрууд — Дархан-Ус Суваг ХК</title>
   <link rel="stylesheet" href="/assets/css/style.css">
-  <style>
-    @media (min-width: 1280px) {
-      .stations-layout { display: grid; grid-template-columns: 304px minmax(0,1fr); gap: 24px; }
-    }
-  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -39,48 +34,15 @@
         <span class="topbar-title">Ус түгээх байрууд</span>
       </div>
 
-      <div class="app-page">
-        <!-- Mobile: dropdown bag select + filters -->
-        <div id="mobile-filters" class="card section-stack" style="display:none">
-          <div class="field">
-            <label for="mobile-bag-select">Баг</label>
-            <select id="mobile-bag-select" class="select"></select>
-          </div>
-          <div class="field">
-            <label for="mobile-search">Хайлт</label>
-            <input id="mobile-search" type="text" class="input" placeholder="Код, нэр, байршил, хянагчаар хайх">
-          </div>
-          <div class="field-row-2">
-            <div class="field">
-              <label for="mobile-status">Төлөв</label>
-              <select id="mobile-status" class="select">
-                <option value="all">Бүх төлөв</option>
-                <option value="new">Шинэ</option>
-                <option value="assigned">Хуваарилсан</option>
-                <option value="urgent">Яаралтай</option>
-                <option value="in_progress">Явцдаа</option>
-                <option value="done">Дууссан</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="mobile-dept">Алба</label>
-              <select id="mobile-dept" class="select">
-                <option value="all">Бүх алба</option>
-              </select>
-            </div>
-          </div>
-          <div id="mobile-view-filters" class="tab-list" style="gap:8px"></div>
+      <div class="stations-outer">
+        <!-- Bag panel: sticky top strip (narrow) / sticky left col (wide) -->
+        <div id="bag-panel" class="card section-stack">
+          <h2 style="font-size:18px;font-weight:700;color:var(--ink-900)">Багууд</h2>
+          <div id="bag-grid" class="bag-numbers-grid"></div>
         </div>
 
-        <!-- Desktop: two-column layout -->
-        <div class="stations-layout">
-          <!-- Left: Bag folders (desktop only) -->
-          <div id="bag-panel" class="card section-stack" style="align-self:start;position:sticky;top:80px">
-            <h2 style="font-size:18px;font-weight:700;color:var(--ink-900)">Багууд</h2>
-            <div id="bag-grid" class="bag-numbers-grid"></div>
-          </div>
-
-          <!-- Right: Station list -->
+        <!-- Station panel -->
+        <div class="app-page" style="padding-top:0">
           <div id="station-panel" class="card section-stack" style="overflow:hidden">
             <div class="section-stack" style="border-bottom:1px solid var(--slate-200);padding-bottom:14px">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -111,7 +73,6 @@
                 </div>
               </div>
 
-              <!-- View filter tabs: Бүгд / Идэвхтэй / Чөлөөтэй -->
               <div id="view-filters" style="display:flex;flex-wrap:wrap;gap:8px"></div>
             </div>
 
@@ -123,23 +84,5 @@
   </div>
 
   <script type="module" src="/assets/js/pages/stations-internal.js"></script>
-  <script type="module">
-    import { setupSidebar } from "/assets/js/sidebar.js";
-    import { getUser } from "/assets/js/auth.js";
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setupSidebar();
-      const user = getUser();
-      const map = {
-        dispatcher:           "/dispatcher.html",
-        general_engineer:     "/engineer.html",
-        department_engineer:  "/engineer.html",
-        brigade_leader:       "/brigade.html",
-        admin:                "/admin.html",
-      };
-      const link = document.getElementById("dashboard-link");
-      if (link && user) link.href = map[user.role] || "/app.html";
-    });
-  </script>
 </body>
 </html>

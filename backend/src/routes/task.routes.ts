@@ -75,7 +75,22 @@ router.post("/", requireAuth, requireRole("admin", "general_engineer", "departme
 router.patch("/:id/start", requireAuth, requireRole("brigade_leader"), async (req, res) => {
   try {
     const { id } = req.params;
+    const userTeamId = req.user!.teamId;
     const now = new Date().toISOString();
+
+    const taskRes = await query<{ team_id: string }>(
+      "SELECT team_id FROM tasks WHERE id = $1", [id]
+    );
+    const task = taskRes.rows[0];
+    if (!task) {
+      res.status(404).json({ ok: false, message: "Ажил олдсонгүй" });
+      return;
+    }
+    if (task.team_id !== userTeamId) {
+      res.status(403).json({ ok: false, message: "Энэ ажил таны бригадад хуваарилагдаагүй" });
+      return;
+    }
+
     await query(
       "UPDATE tasks SET status='in_progress', started_at=COALESCE(started_at,$1) WHERE id=$2",
       [now, id]

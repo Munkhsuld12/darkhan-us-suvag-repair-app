@@ -32,42 +32,22 @@
           <button id="close-login-btn" style="border-radius:999px;background:var(--slate-100);border:none;padding:8px 12px;font-size:13px;font-weight:600;color:var(--slate-600);cursor:pointer;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background='var(--slate-200)'" onmouseout="this.style.background='var(--slate-100)'">Хаах</button>
         </div>
 
-        <!-- Demo accounts -->
-        <div style="margin-bottom:20px">
-          <p style="font-size:13px;font-weight:600;color:var(--slate-600);margin-bottom:10px">Туршилтын хэрэглэгч</p>
-          <div class="demo-grid">
-            <button class="demo-btn" data-username="admin" data-password="admin123">
-              <span class="demo-role">Админ</span>
-              <span class="demo-creds">admin / admin123</span>
-            </button>
-            <button class="demo-btn" data-username="dispatcher" data-password="dispatch123">
-              <span class="demo-role">Диспетчер</span>
-              <span class="demo-creds">dispatcher / dispatch123</span>
-            </button>
-            <button class="demo-btn" data-username="chief" data-password="chief123">
-              <span class="demo-role">Ерөнхий инженер</span>
-              <span class="demo-creds">chief / chief123</span>
-            </button>
-            <button class="demo-btn" data-username="eng1" data-password="eng123">
-              <span class="demo-role">Хэлтсийн инженер</span>
-              <span class="demo-creds">eng1 / eng123</span>
-            </button>
-            <button class="demo-btn" data-username="bat" data-password="bat123" style="grid-column:1/-1">
-              <span class="demo-role">Бригадын ахлагч</span>
-              <span class="demo-creds">bat / bat123</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Login form -->
         <form id="login-modal-form" class="field-grid">
           <div class="field">
             <label for="lm-username">Нэвтрэх нэр</label>
-            <input id="lm-username" type="text" class="input" placeholder="Жишээ: admin" required autocomplete="username">
+            <input id="lm-username" type="text" class="input" placeholder="Нэвтрэх нэр" required autocomplete="username">
           </div>
           <div class="field">
             <label for="lm-password">Нууц үг</label>
-            <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна" required autocomplete="current-password">
+            <div style="position:relative">
+              <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна" required autocomplete="current-password" style="padding-right:40px">
+              <button type="button" id="lm-toggle-password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);padding:0;line-height:1">
+                <svg id="lm-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <p id="lm-error" class="error-msg" style="display:none"></p>
           <button id="lm-submit" type="submit" class="btn btn-primary btn-full btn-lg">Нэвтрэх</button>
@@ -98,8 +78,10 @@
           <form id="complaint-form" class="field-grid">
             <div class="field">
               <label for="c-station">Ус түгээх байрны код <span style="color:var(--rose-500)">*</span></label>
-              <input id="c-station" type="text" class="input" list="c-station-datalist" placeholder="Жишээ: 1-14" required autocomplete="off">
-              <datalist id="c-station-datalist"></datalist>
+              <div class="station-combobox">
+                <input id="c-station" type="text" class="input" placeholder="Код эсвэл байршилаар хайх…" autocomplete="off">
+                <div id="c-station-dropdown" class="station-dropdown hidden"></div>
+              </div>
             </div>
 
             <div class="field">
@@ -155,10 +137,10 @@
     <div class="panel-grid panel-grid-home">
 
       <!-- Station preview (left) -->
-      <div class="card card-sm" style="max-height:720px;min-height:360px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
+      <div class="card card-sm" style="max-height:900px;min-height:360px;overflow:hidden;display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
           <h2 id="station-grid-title" style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">—</h2>
-          <a id="all-stations-link" href="/stations.html" style="font-size:13px;font-weight:600;color:var(--brand-700);text-decoration:none;flex-shrink:0">Бүгдийг харах</a>
+          <a id="all-stations-link" class="btn btn-primary btn-sm" href="/stations.html" style="font-size:13px;font-weight:600; text-decoration:none;flex-shrink:0;">Бүгдийг харах</a>
         </div>
         <div style="overflow-y:auto;flex:1;min-height:0;padding-right:4px">
           <div class="compact-grid" id="station-preview-grid" style="align-content:start"></div>

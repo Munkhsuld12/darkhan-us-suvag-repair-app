@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Нэвтрээгүй бол login руу
   if (!token || !user) {
-    window.location.href = "/login.html";
+    window.location.href = "/?login=1";
     return;
   }
   // Профайл бүрэн бол dashboard руу

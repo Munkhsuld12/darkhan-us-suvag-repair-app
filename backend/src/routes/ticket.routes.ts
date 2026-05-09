@@ -147,10 +147,14 @@ router.patch("/:id/assign", requireAuth, requireRole("admin", "dispatcher"), asy
     const status = buildStatus(priority || "normal", Boolean(teamId));
     const now = new Date().toISOString();
 
-    await query(
+    const assignResult = await query(
       "UPDATE tickets SET department_id=$1, team_id=$2, priority=$3, status=$4, assigned_by=$5, assigned_at=$6 WHERE id=$7",
       [departmentId || null, teamId || null, priority || "normal", status, assignedBy, now, id]
     );
+    if ((assignResult.rowCount ?? 0) === 0) {
+      res.status(404).json({ ok: false, message: "Засварын хүсэлт олдсонгүй" });
+      return;
+    }
 
     await query(
       "INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES ($1,$2,$3,$4,$5,$6)",

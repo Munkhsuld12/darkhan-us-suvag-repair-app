@@ -8,10 +8,10 @@ const router = Router();
 router.get("/", requireAuth, async (_req, res) => {
   try {
     const [depts, teams, users, stations] = await Promise.all([
-      query("SELECT id, name FROM departments ORDER BY name"),
-      query("SELECT id, name, department_id, leader_user_id FROM teams ORDER BY name"),
-      query("SELECT id, full_name, username, role, department_id, team_id, phone FROM users ORDER BY full_name"),
-      query("SELECT id, code, name, bag_no, location, caretaker_name, caretaker_phone FROM water_stations ORDER BY bag_no, code"),
+      query("SELECT id, name FROM departments WHERE deleted_at IS NULL ORDER BY name"),
+      query("SELECT id, name, department_id, leader_user_id FROM teams WHERE deleted_at IS NULL ORDER BY name"),
+      query("SELECT id, full_name, username, role, department_id, team_id, phone FROM users WHERE deleted_at IS NULL ORDER BY full_name"),
+      query("SELECT id, code, name, bag_no, location, caretaker_name, caretaker_phone FROM water_stations WHERE deleted_at IS NULL ORDER BY bag_no, code"),
     ]);
 
     res.json({

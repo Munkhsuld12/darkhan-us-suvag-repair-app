@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="card" style="margin-bottom:20px">
         <div class="page-header">
           <h1 style="font-size:2.5rem;font-weight:800">${escapeHtml(station.code)}</h1>
-          <a href="/stations.html" class="btn btn-secondary btn-sm">← Жагсаалт</a>
+          <button class="btn btn-secondary btn-sm" onclick="history.length > 1 ? history.back() : (location.href='/stations.html')">← Буцах</button>
         </div>
         <div style="margin-top:16px;display:grid;gap:8px;font-size:14px">
           <p><strong>Баг:</strong> ${station.bagNo}-р баг</p>

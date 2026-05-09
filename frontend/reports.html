@@ -145,23 +145,5 @@
   </div>
 
   <script type="module" src="/assets/js/pages/reports.js"></script>
-  <script type="module">
-    import { setupSidebar } from "/assets/js/sidebar.js";
-    import { getUser } from "/assets/js/auth.js";
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setupSidebar();
-      const user = getUser();
-      const map = {
-        dispatcher:           "/dispatcher.html",
-        general_engineer:     "/engineer.html",
-        department_engineer:  "/engineer.html",
-        brigade_leader:       "/brigade.html",
-        admin:                "/admin.html",
-      };
-      const link = document.getElementById("dashboard-link");
-      if (link && user) link.href = map[user.role] || "/app.html";
-    });
-  </script>
 </body>
 </html>

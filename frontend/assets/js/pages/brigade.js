@@ -1,5 +1,6 @@
 import * as api from "../api.js";
 import { requireAuth } from "../auth.js";
+import { setupSidebar } from "../sidebar.js";
 import {
   formatDateTime, statusBadge, getStationLabel, todayStr,
   emptyState, escapeHtml, el,
@@ -10,6 +11,7 @@ let user = null;
 let selectedItem = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  setupSidebar();
   user = requireAuth();
   if (!user) return;
 
