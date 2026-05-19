@@ -57,6 +57,7 @@ function renderSummary() {
 }
 
 function renderWorkload() {
+  const today = new Date().toISOString().slice(0, 10);
   const sorted = [...state.teams].sort((a, b) => {
     const diff = getTeamWorkloadCount(b.id, state.tickets, state.tasks) - getTeamWorkloadCount(a.id, state.tickets, state.tasks);
     return diff !== 0 ? diff : a.name.localeCompare(b.name, "mn-MN");
@@ -66,11 +67,32 @@ function renderWorkload() {
     const count  = getTeamWorkloadCount(team.id, state.tickets, state.tasks);
     const leader = state.users.find((u) => u.id === team.leaderUserId)?.fullName ?? "Хуваарилагдаагүй";
     const busy   = count >= 3;
+
+    const todayTasks = state.tasks.filter((t) => t.teamId === team.id && t.taskDate === today);
+    const todayTickets = state.tickets.filter((t) => t.teamId === team.id && t.assignedAt && t.assignedAt.slice(0,10) === today);
+    const total = todayTasks.length + todayTickets.length;
+    const done  = todayTasks.filter((t) => t.status === "done").length
+                + todayTickets.filter((t) => t.status === "done").length;
+    const pct   = total > 0 ? Math.round(done / total * 100) : 0;
+    const barColor = pct === 100 ? "var(--emerald-500)" : pct >= 50 ? "var(--brand-500)" : "var(--amber-500)";
+    const stripeClass = (total > 0 && pct < 100) ? "progress-bar-stripe" : "progress-bar-done";
+    const progressHtml = `
+      <div style="margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:11px;font-weight:700;color:var(--slate-500)">Өнөөдрийн явц</span>
+          <span style="font-size:13px;font-weight:800;color:${total===0?"var(--slate-400)":barColor}">${total===0?"—":`${done}/${total} · ${pct}%`}</span>
+        </div>
+        <div style="position:relative;height:28px;background:var(--slate-200);border-radius:8px;overflow:hidden">
+          ${total > 0 ? `<div class="${stripeClass}" style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:${barColor};border-radius:8px;transition:width 0.6s ease"></div>` : ""}
+        </div>
+      </div>`;
+
     return `
       <div class="workload-card ${busy ? "busy" : "free"}" style="cursor:pointer" data-team-id="${team.id}">
         <p class="workload-name">${escapeHtml(team.name)}</p>
         <p class="workload-leader">${escapeHtml(leader)}</p>
         <p class="workload-count">${count >= 1 ? `${count} ажил` : "Чөлөөтэй"}</p>
+        ${progressHtml}
       </div>`;
   }).join("");
 
@@ -100,6 +122,7 @@ function renderComplaints() {
       </div>
       <p style="font-size:13px;color:var(--slate-600);margin-top:8px">${escapeHtml(c.description)}</p>
       <p style="font-size:12px;color:var(--slate-500);margin-top:6px">${escapeHtml(c.citizenName)} · ${escapeHtml(c.phoneNumber)}</p>
+      ${c.photoName ? `<a href="/uploads/${escapeHtml(c.photoName)}" target="_blank"><img src="/uploads/${escapeHtml(c.photoName)}" alt="Зураг" style="margin-top:8px;max-width:100%;max-height:180px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid var(--slate-200)"></a>` : ""}
     </div>
   `).join("");
 
@@ -109,7 +132,9 @@ function renderComplaints() {
 }
 
 function renderTickets() {
-  const sorted = [...state.tickets].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  const sorted = [...state.tickets]
+    .filter((t) => t.status !== "done")
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   const tickCountEl = el("tickets-count");
   if (tickCountEl) { tickCountEl.textContent = sorted.length; tickCountEl.style.display = sorted.length ? "" : "none"; }
   const listEl = el("tickets-list");
@@ -193,9 +218,31 @@ let currentComplaint = null;
 let modalMode = "create"; // "create" | "assign"
 
 function openTicketModalFromComplaint(complaintId) {
-  currentComplaint = state.complaints.find((c) => c.id === complaintId) || null;
-  modalMode = "create";
-  openTicketModal(currentComplaint);
+  const complaint = state.complaints.find((c) => c.id === complaintId);
+  if (!complaint) return;
+  currentComplaint = complaint;
+
+  const station = state.waterStations.find((s) => s.id === complaint.stationId);
+  el("cam-info").innerHTML = `
+    <p style="font-size:12px;font-weight:700;color:var(--slate-400);margin-bottom:4px">${escapeHtml(station ? getStationOptionLabel(station) : "—")}</p>
+    <p style="font-size:14px;font-weight:600;color:var(--ink-900)">${escapeHtml(complaint.issueType)}</p>
+    <p style="font-size:13px;color:var(--slate-600);margin-top:4px">${escapeHtml(complaint.description)}</p>`;
+
+  const sorted = [...state.teams].sort((a, b) => {
+    const wa = getTeamWorkloadCount(a.id, state.tickets, state.tasks);
+    const wb = getTeamWorkloadCount(b.id, state.tickets, state.tasks);
+    return wa - wb || a.name.localeCompare(b.name, "mn-MN");
+  });
+  el("cam-team").innerHTML = `<option value="">Засварын бригад сонгох</option>` +
+    sorted.map((t) => {
+      const w = getTeamWorkloadCount(t.id, state.tickets, state.tasks);
+      const leader = state.users.find((u) => u.id === t.leaderUserId)?.fullName ?? "—";
+      const load = w > 0 ? `${w} ажил` : "Чөлөөтэй";
+      return `<option value="${t.id}">${escapeHtml(t.name)} — ${escapeHtml(leader)} (${load})</option>`;
+    }).join("");
+  el("cam-priority").value = "normal";
+
+  el("complaint-assign-modal").classList.remove("hidden");
 }
 
 function openTicketModal(complaint) {
@@ -355,6 +402,31 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) { alert(err.message); }
   });
 
+  // Complaint quick-assign form submit
+  el("complaint-assign-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentComplaint) return;
+    const teamId = el("cam-team").value;
+    if (!teamId) { alert("Засварын бригад сонгоно уу"); return; }
+    const team = state.teams.find((t) => t.id === teamId);
+    const user = JSON.parse(localStorage.getItem("dhs_user") || "{}");
+    try {
+      await api.createTicket({
+        complaintId: currentComplaint.id,
+        stationId: currentComplaint.stationId,
+        issueType: currentComplaint.issueType,
+        description: currentComplaint.description,
+        source: currentComplaint.source,
+        departmentId: team?.departmentId || undefined,
+        teamId,
+        priority: el("cam-priority").value,
+        createdBy: user.id,
+      });
+      closeModals();
+      await loadAll(); renderAll();
+    } catch (err) { alert(err.message); }
+  });
+
   // Close buttons
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
     btn.addEventListener("click", closeModals);
@@ -365,6 +437,7 @@ function closeModals() {
   el("ticket-modal")?.classList.add("hidden");
   el("assign-modal")?.classList.add("hidden");
   el("team-detail-modal")?.classList.add("hidden");
+  el("complaint-assign-modal")?.classList.add("hidden");
   currentComplaint = null;
 }
 

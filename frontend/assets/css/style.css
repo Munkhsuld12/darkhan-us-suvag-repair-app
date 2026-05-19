@@ -817,6 +817,27 @@ tbody tr:hover { background: var(--slate-50); }
 .workload-card .workload-leader { font-size: 13px; color: var(--slate-500); margin-top: 4px; }
 .workload-card .workload-count { font-size: 13px; font-weight: 700; margin-top: 12px; }
 
+/* Animated striped progress bar */
+@keyframes stripe-slide {
+  from { background-position: 40px 0; }
+  to   { background-position: 0 0; }
+}
+.progress-bar-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(255,255,255,0.20) 10px,
+    rgba(255,255,255,0.20) 20px
+  );
+  background-size: 40px 40px;
+  animation: stripe-slide 0.8s linear infinite;
+}
+.progress-bar-done {
+  background-image: none;
+  animation: none;
+}
+
 /* Empty state */
 .empty-state {
   text-align: center;
@@ -936,6 +957,10 @@ tbody tr:hover { background: var(--slate-50); }
   margin-top: 2px;
   display: block;
 }
+
+/* Station table rows (internal + public) */
+.station-row-clickable:hover,
+.station-row-link:hover { background: var(--slate-50) !important; }
 
 /* ══════════════════════════════════════════
    STATION CARDS (public, matches React StationCard)
@@ -1217,6 +1242,17 @@ tbody tr:hover { background: var(--slate-50); }
   .app-page { padding: 14px; }
   .public-main { padding: 20px 16px; }
   .demo-grid { grid-template-columns: 1fr; }
+}
+
+/* ── User role grid ── */
+.user-role-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .user-role-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Utility ── */
