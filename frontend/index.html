@@ -12,7 +12,7 @@
     <div class="pub-header-wrap">
       <div class="pub-header-card">
         <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
-          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+          <img src="/DUS-only-logo.png" alt="Дархан-Ус Суваг ХК" style="height:48px;width:auto;object-fit:contain;display:block">
         </a>
         <button id="open-login-btn" class="btn btn-secondary btn-sm" style="flex-shrink:0">Нэвтрэх</button>
       </div>
@@ -51,6 +51,23 @@
           </div>
           <p id="lm-error" class="error-msg" style="display:none"></p>
           <button id="lm-submit" type="submit" class="btn btn-primary btn-full btn-lg">Нэвтрэх</button>
+          <p style="text-align:center;margin:4px 0 0">
+            <a href="#" id="lm-forgot-link" style="font-size:13px;color:var(--blue-600);text-decoration:none">Нууц үг мартсан уу?</a>
+          </p>
+        </form>
+
+        <!-- Forgot password form (hidden by default) -->
+        <form id="forgot-form" class="field-grid" style="display:none">
+          <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">И-мэйл хаягаа оруулна уу. Reset холбоос илгээнэ.</p>
+          <div class="field">
+            <label for="lm-email">И-мэйл хаяг</label>
+            <input id="lm-email" type="email" class="input" placeholder="name@example.com" required autocomplete="email">
+          </div>
+          <p id="forgot-msg" style="display:none;font-size:13px;padding:8px 12px;border-radius:6px"></p>
+          <button id="forgot-submit" type="submit" class="btn btn-primary btn-full">Холбоос илгээх</button>
+          <p style="text-align:center;margin:4px 0 0">
+            <a href="#" id="lm-back-link" style="font-size:13px;color:var(--blue-600);text-decoration:none">Буцах</a>
+          </p>
         </form>
       </div>
     </div>
@@ -159,6 +176,33 @@
     </div>
   </main>
 
+  <!-- Station detail modal -->
+  <div id="station-detail-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:620px">
+      <div class="modal-header">
+        <div>
+          <h2 id="sdm-code" style="font-size:22px;font-weight:800"></h2>
+          <p id="sdm-location" style="font-size:13px;color:var(--slate-500);margin-top:2px"></p>
+        </div>
+        <button class="modal-close" id="sdm-close">✕</button>
+      </div>
+      <div class="modal-body" style="max-height:72vh;overflow-y:auto">
+        <div id="sdm-info" style="display:grid;gap:6px;font-size:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--slate-200)"></div>
+        <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr">
+          <div>
+            <p id="sdm-tickets-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin-bottom:8px"></p>
+            <div id="sdm-tickets" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div>
+            <p id="sdm-logs-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin-bottom:8px"></p>
+            <div id="sdm-logs" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/assets/js/pages/home.js"></script>
 </body>
 </html>
+

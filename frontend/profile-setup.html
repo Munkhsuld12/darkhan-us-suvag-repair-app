@@ -11,7 +11,7 @@
     <div class="pub-header-wrap">
       <div class="pub-header-card">
         <a href="/" style="flex-shrink:0;max-width:min(74vw,360px);overflow:hidden;display:block">
-          <img src="/DUS-name-logo-out-light.png" alt="Дархан Ус Суваг ХК" style="height:40px;width:auto;object-fit:contain;display:block">
+          <img src="/DUS-only-logo.png" alt="Дархан-Ус Суваг ХК" style="height:48px;width:auto;object-fit:contain;display:block">
         </a>
       </div>
     </div>
@@ -32,12 +32,16 @@
 
       <form id="setup-form" class="field-grid">
         <div class="field">
-          <label for="sp-email">И-мэйл хаяг</label>
-          <input id="sp-email" type="email" class="input" placeholder="example@gmail.com" autocomplete="email">
+          <label for="sp-fullname">Бүтэн нэр <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-fullname" type="text" class="input" placeholder="Овог Нэр" required autocomplete="name">
         </div>
         <div class="field">
           <label for="sp-phone">Утасны дугаар <span style="color:var(--rose-500)">*</span></label>
           <input id="sp-phone" type="tel" class="input" placeholder="9900 0000" required autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="sp-email">И-мэйл хаяг</label>
+          <input id="sp-email" type="email" class="input" placeholder="example@gmail.com" autocomplete="email">
         </div>
         <div class="field">
           <label for="sp-password">Шинэ нууц үг <span style="color:var(--rose-500)">*</span></label>

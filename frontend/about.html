@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дархан-Ус Суваг ХК</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>
+    body { background: var(--bg-hero); min-height: 100vh; }
+
+    .lp-header {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .lp-header-inner {
+      max-width: 960px; margin: 0 auto;
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+
+    .lp-main { max-width: 960px; margin: 0 auto; padding: 36px 20px 64px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Hero */
+    .lp-hero {
+      background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-500) 60%, var(--accent) 100%);
+      border-radius: 20px;
+      padding: 48px 40px;
+      color: #fff;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .lp-hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.18); border-radius: 999px;
+      padding: 4px 14px; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; width: fit-content;
+    }
+    .lp-hero h1 { font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.15; }
+    .lp-hero p { font-size: 15px; color: rgba(255,255,255,0.85); max-width: 540px; line-height: 1.6; }
+    .lp-hero-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .btn-white {
+      background: #fff; color: var(--brand-700); border: none; border-radius: var(--radius-sm);
+      padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer;
+      text-decoration: none; display: inline-block; transition: opacity 0.15s;
+    }
+    .btn-white:hover { opacity: 0.88; text-decoration: none; }
+    .btn-outline-white {
+      background: rgba(255,255,255,0.15); color: #fff;
+      border: 1px solid rgba(255,255,255,0.40); border-radius: var(--radius-sm);
+      padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+      text-decoration: none; display: inline-block; transition: background 0.15s;
+    }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.25); text-decoration: none; }
+
+    /* Stats */
+    .lp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+    .lp-stat {
+      background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200);
+      padding: 20px; display: flex; flex-direction: column; gap: 4px;
+      box-shadow: var(--shadow-card);
+    }
+    .lp-stat-value { font-size: 2rem; font-weight: 900; color: var(--brand-600); letter-spacing: -0.03em; }
+    .lp-stat-label { font-size: 13px; color: var(--slate-500); font-weight: 500; }
+
+    /* Info cards */
+    .lp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 540px) { .lp-grid { grid-template-columns: 1fr; } }
+    .lp-card {
+      background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200);
+      padding: 28px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 12px;
+    }
+    .lp-card-bar { height: 4px; width: 40px; border-radius: 999px; }
+    .lp-card h3 { font-size: 16px; font-weight: 700; color: var(--ink-900); }
+    .lp-card p  { font-size: 14px; color: var(--slate-500); line-height: 1.65; }
+
+    /* Contact */
+    .lp-contact {
+      background: #fff; border-radius: var(--radius); border: 1px solid var(--slate-200);
+      padding: 28px; box-shadow: var(--shadow-card);
+    }
+    .lp-contact h2 { font-size: 18px; font-weight: 800; color: var(--ink-900); margin-bottom: 18px; }
+    .lp-contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; }
+    .lp-contact-item { display: flex; flex-direction: column; gap: 3px; }
+    .lp-contact-item .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--slate-400); }
+    .lp-contact-item .val { font-size: 14px; font-weight: 600; color: var(--ink-900); }
+    .lp-contact-item a.val { color: var(--brand-600); }
+
+    /* Footer */
+    .lp-footer { text-align: center; font-size: 12px; color: var(--slate-400); padding: 24px 0 8px; }
+
+    @media (max-width: 600px) {
+      .lp-hero { padding: 32px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="lp-header">
+    <div class="lp-header-inner">
+      <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+        <img src="/DUS-only-logo.png" alt="Дархан-Ус Суваг ХК" style="height:48px;width:auto;object-fit:contain;display:block">
+        <span style="font-size:15px;font-weight:800;color:var(--ink-900);letter-spacing:-0.02em;line-height:1.2">Дархан-Ус Суваг <span style="color:var(--brand-500)">ХК</span></span>
+      </a>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="/stations.html" class="btn btn-ghost btn-sm">Ус түгээх байрууд</a>
+        <button id="open-login-btn" class="btn btn-primary btn-sm">Нэвтрэх</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login modal -->
+  <div id="login-modal" style="display:none;position:fixed;inset:0;z-index:60;overflow-y:auto;background:rgba(15,33,61,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:12px;align-items:center;justify-content:center">
+    <div style="width:100%;max-width:420px;margin:auto">
+      <div class="card" style="padding:28px 28px 24px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px">
+          <div>
+            <p style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate-500);margin-bottom:4px">Нэвтрэх</p>
+            <h2 style="font-size:1.25rem;font-weight:800;color:var(--ink-900);letter-spacing:-0.02em">Дотоод хэрэглэгч</h2>
+          </div>
+          <button id="close-login-btn" style="border-radius:999px;background:var(--slate-100);border:none;padding:8px 12px;font-size:13px;font-weight:600;color:var(--slate-600);cursor:pointer;flex-shrink:0">Хаах</button>
+        </div>
+        <form id="login-modal-form" class="field-grid">
+          <div class="field">
+            <label for="lm-username">Нэвтрэх нэр</label>
+            <input id="lm-username" type="text" class="input" placeholder="Нэвтрэх нэр" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="lm-password">Нууц үг</label>
+            <div style="position:relative">
+              <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна" required autocomplete="current-password" style="padding-right:40px">
+              <button type="button" id="lm-toggle-password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);padding:0">
+                <svg id="lm-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p id="lm-error" class="error-msg" style="display:none"></p>
+          <button id="lm-submit" type="submit" class="btn btn-primary btn-full btn-lg">Нэвтрэх</button>
+          <p style="text-align:center;margin:4px 0 0">
+            <a href="#" id="lm-forgot-link" style="font-size:13px;color:var(--blue-600);text-decoration:none">Нууц үг мартсан уу?</a>
+          </p>
+        </form>
+        <form id="forgot-form" class="field-grid" style="display:none">
+          <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">И-мэйл хаягаа оруулна уу.</p>
+          <div class="field">
+            <label for="lm-email">И-мэйл хаяг</label>
+            <input id="lm-email" type="email" class="input" placeholder="name@example.com" required autocomplete="email">
+          </div>
+          <p id="forgot-msg" style="display:none;font-size:13px;padding:8px 12px;border-radius:6px"></p>
+          <button id="forgot-submit" type="submit" class="btn btn-primary btn-full">Холбоос илгээх</button>
+          <p style="text-align:center;margin:4px 0 0">
+            <a href="#" id="lm-back-link" style="font-size:13px;color:var(--blue-600);text-decoration:none">Буцах</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <main class="lp-main">
+
+    <!-- Hero -->
+    <div class="lp-hero">
+      <div class="lp-hero-tag">Дархан хот · Усан хангамж</div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <img src="/DUS-only-logo.png" alt="" style="height:64px;width:auto;object-fit:contain;opacity:0.92;flex-shrink:0">
+        <h1>Дархан-Ус Суваг<br>Хувьцаат Компани</h1>
+      </div>
+      <p>Дархан хотын иргэдэд найдвартай, цэвэр усны хангамж хүргэх, ус түгээх байруудын засвар үйлчилгээг хариуцан ажилладаг.</p>
+      <div class="lp-hero-btns">
+        <a href="/index.html" class="btn-white">Гомдол, хүсэлт илгээх</a>
+        <a href="/stations.html" class="btn-outline-white">Ус түгээх байрууд</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="lp-stats">
+      <div class="lp-stat"><p class="lp-stat-value" id="stat-stations">…</p><p class="lp-stat-label">Ус түгээх байр</p></div>
+      <div class="lp-stat"><p class="lp-stat-value" id="stat-bags">…</p><p class="lp-stat-label">Баг хамрагдана</p></div>
+      <div class="lp-stat"><p class="lp-stat-value">3</p><p class="lp-stat-label">Засварын бригад</p></div>
+      <div class="lp-stat"><p class="lp-stat-value">24/7</p><p class="lp-stat-label">Дуудлагын үйлчилгээ</p></div>
+    </div>
+
+    <!-- Info cards -->
+    <div class="lp-grid">
+      <div class="lp-card">
+        <div class="lp-card-bar" style="background:var(--brand-500)"></div>
+        <h3>Усны хангамж</h3>
+        <p>Дархан хотын гудамж, хороолол, суурин газруудад цэвэр усны тасралтгүй хангамж хэрэгжүүлдэг.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-bar" style="background:var(--emerald-500)"></div>
+        <h3>Засвар үйлчилгээ</h3>
+        <p>Ус түгээх байруудын эвдрэл, гэмтлийг мэргэжлийн бригадаар яаралтай засварлана. Бүх засварыг системд бүртгэнэ.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-bar" style="background:var(--amber-500)"></div>
+        <h3>Гомдол хүлээн авах</h3>
+        <p>Иргэд вэб хэлбэрээр гомдол, хүсэлтээ илгээж болно. Хариу хугацааг хянаж, мэдэгдэл авна.</p>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-bar" style="background:var(--sky-500)"></div>
+        <h3>Ил тод мэдээлэл</h3>
+        <p>Ус түгээх байр бүрийн байршил, хариуцагчийн мэдээлэл, засварын түүх нийтэд нээлттэй.</p>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="lp-contact">
+      <h2>Холбоо барих</h2>
+      <div class="lp-contact-grid">
+        <div class="lp-contact-item"><p class="lbl">Байршил</p><p class="val">Дархан хот, Дархан дүүрэг</p></div>
+        <div class="lp-contact-item"><p class="lbl">Утас</p><a class="val" href="tel:+97601234567">+976 0123 4567</a></div>
+        <div class="lp-contact-item"><p class="lbl">И-мэйл</p><a class="val" href="mailto:info@darkhan-us.mn">info@darkhan-us.mn</a></div>
+        <div class="lp-contact-item"><p class="lbl">Ажлын цаг</p><p class="val">Да–Баа 08:00–17:00</p></div>
+        <div class="lp-contact-item"><p class="lbl">Яаралтай дуудлага</p><a class="val" href="tel:+97601234568">+976 0123 4568</a></div>
+        <div class="lp-contact-item"><p class="lbl">Вэбсайт</p><a class="val" href="/">darkhan-us.mn</a></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="lp-footer">
+    <p>&copy; 2025 Дархан-Ус Суваг ХК. Бүх эрх хуулиар хамгаалагдсан.</p>
+  </footer>
+
+  <script type="module" src="/assets/js/pages/about.js"></script>
+</body>
+</html>
