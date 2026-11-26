@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderAll();
   setupPhoneForm();
   setupNewTicketBtn();
+  setupModalListeners();
 });
 
 async function loadAll() {
@@ -109,7 +110,7 @@ function renderComplaints() {
   const countEl = el("complaints-count");
   if (countEl) { countEl.textContent = pending.length; countEl.style.display = pending.length ? "" : "none"; }
   const listEl = el("complaints-list");
-  if (!pending.length) { listEl.innerHTML = emptyState("Шинэ хүсэлт алга"); return; }
+  if (!pending.length) { listEl.innerHTML = emptyState("Шинэ хүсэлт ирээгүй байна."); return; }
 
   listEl.innerHTML = pending.map((c) => `
     <div class="item-card">
@@ -118,7 +119,7 @@ function renderComplaints() {
           <p class="item-meta">${sourceBadge(c.source)} · ${escapeHtml(formatDateTime(c.createdAt))}</p>
           <h3 class="item-title">${escapeHtml(getStationLabel(c.stationId, state.waterStations))} · ${escapeHtml(c.issueType)}</h3>
         </div>
-        <button class="btn btn-secondary btn-sm" data-action="register-complaint" data-id="${c.id}">Бүртгэх</button>
+        <button class="btn btn-amber btn-sm" data-action="register-complaint" data-id="${c.id}">Бүртгэх</button>
       </div>
       <p style="font-size:13px;color:var(--slate-600);margin-top:8px">${escapeHtml(c.description)}</p>
       <p style="font-size:12px;color:var(--slate-500);margin-top:6px">${escapeHtml(c.citizenName)} · ${escapeHtml(c.phoneNumber)}</p>
@@ -138,7 +139,7 @@ function renderTickets() {
   const tickCountEl = el("tickets-count");
   if (tickCountEl) { tickCountEl.textContent = sorted.length; tickCountEl.style.display = sorted.length ? "" : "none"; }
   const listEl = el("tickets-list");
-  if (!sorted.length) { listEl.innerHTML = emptyState("Засварын хүсэлт алга"); return; }
+  if (!sorted.length) { listEl.innerHTML = emptyState("Засварын хүсэлт бүртгэгдээгүй байна."); return; }
 
   listEl.innerHTML = sorted.map((t) => `
     <div class="item-card">
@@ -348,7 +349,7 @@ function updateTeamOptions(teamElId, deptElId) {
 }
 
 // Wire up modal interactions
-document.addEventListener("DOMContentLoaded", () => {
+function setupModalListeners() {
   // Station input → resolve id
   el("tm-station")?.addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase();
@@ -431,7 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
     btn.addEventListener("click", closeModals);
   });
-});
+}
 
 function closeModals() {
   el("ticket-modal")?.classList.add("hidden");
@@ -456,11 +457,11 @@ function openTeamDetailModal(teamId) {
 
   const ticketHtml = tickets.length
     ? tickets.map((t) => `
-      <div class="item-card" style="padding:10px 12px">
+      <div class="item-card" style="padding:10px 12px;border-left:3px solid #f97316">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:600;color:var(--slate-500)">Засварын хүсэлт</span>
-          ${statusBadge(t.status)}
-          ${t.priority === "urgent" ? `<span class="badge badge-urgent">Яаралтай</span>` : ""}
+          <span style="font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:0.05em">Засварын хүсэлт</span>
+          ${statusBadge(t.status === "urgent" ? "assigned" : t.status)}
+          ${(t.priority === "urgent" || t.status === "urgent") ? `<span class="badge badge-urgent">Яаралтай</span>` : ""}
         </div>
         <p style="font-weight:600;font-size:14px;margin-top:4px">${escapeHtml(getStationLabel(t.stationId, state.waterStations))} · ${escapeHtml(t.issueType)}</p>
         <p style="font-size:12px;color:var(--slate-500);margin-top:2px">${escapeHtml(t.ticketNo)} · ${fmt(t.assignedAt ?? t.createdAt)}</p>
@@ -469,15 +470,15 @@ function openTeamDetailModal(teamId) {
 
   const taskHtml = tasks.length
     ? tasks.map((t) => `
-      <div class="item-card" style="padding:10px 12px">
+      <div class="item-card" style="padding:10px 12px;border-left:3px solid #0ea5e9">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:600;color:var(--slate-500)">Ажлын даалгавар</span>
+          <span style="font-size:11px;font-weight:700;color:#0ea5e9;text-transform:uppercase;letter-spacing:0.05em">Ажлын даалгавар</span>
           ${statusBadge(t.status)}
         </div>
         <p style="font-weight:600;font-size:14px;margin-top:4px">${escapeHtml(getStationLabel(t.stationId, state.waterStations))} · ${escapeHtml(t.description)}</p>
         <p style="font-size:12px;color:var(--slate-500);margin-top:2px">Огноо: ${escapeHtml(t.taskDate)}</p>
       </div>`).join("")
-    : `<p class="empty-state" style="padding:12px">Ажлын даалгавар байхгүй</p>`;
+    : `<p class="empty-state" style="padding:12px">Ажлын даалгавар алга.</p>`;
 
   el("tdm-body").innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px">

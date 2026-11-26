@@ -539,6 +539,7 @@ body.bg-hero { background: var(--bg-hero); min-height: 100vh; }
 .btn-danger    { background: var(--rose-600); color: white; }
 .btn-ghost     { background: transparent; color: var(--slate-600); }
 .btn-ghost:hover:not(:disabled) { background: var(--slate-100); opacity: 1; }
+.btn-amber     { background: var(--amber-400); color: var(--ink-900); }
 
 .btn-sm  { padding: 6px 12px; font-size: 13px; }
 .btn-lg  { padding: 11px 22px; font-size: 15px; }

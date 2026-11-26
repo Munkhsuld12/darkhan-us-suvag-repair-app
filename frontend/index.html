@@ -58,7 +58,7 @@
 
         <!-- Forgot password form (hidden by default) -->
         <form id="forgot-form" class="field-grid" style="display:none">
-          <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">И-мэйл хаягаа оруулна уу. Reset холбоос илгээнэ.</p>
+          <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">И-мэйл хаягаа оруулна уу. Нууц үг шинэчлэх холбоос илгээнэ.</p>
           <div class="field">
             <label for="lm-email">И-мэйл хаяг</label>
             <input id="lm-email" type="email" class="input" placeholder="name@example.com" required autocomplete="email">
@@ -78,7 +78,10 @@
     <!-- Complaint card -->
     <div class="card card-sm" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
       <h2 style="font-size:15px;font-weight:600;color:var(--ink-900)">Гомдол, хүсэлт</h2>
-      <button id="open-complaint-btn" class="btn btn-primary btn-sm" style="flex-shrink:0">Хүсэлт илгээх</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <a id="last-complaint-edit-btn" class="btn btn-secondary btn-sm hidden" href="#" style="flex-shrink:0">Сүүлд илгээсэн хүсэлтээ засах</a>
+        <button id="open-complaint-btn" class="btn btn-primary btn-sm" style="flex-shrink:0">Хүсэлт илгээх</button>
+      </div>
     </div>
 
     <!-- Complaint modal -->
@@ -96,7 +99,7 @@
             <div class="field">
               <label for="c-station">Ус түгээх байрны код <span style="color:var(--rose-500)">*</span></label>
               <div class="station-combobox">
-                <input id="c-station" type="text" class="input" placeholder="Код эсвэл байршилаар хайх…" autocomplete="off">
+                <input id="c-station" type="text" class="input" placeholder="Код эсвэл байршлаар хайх…" autocomplete="off">
                 <div id="c-station-dropdown" class="station-dropdown hidden"></div>
               </div>
             </div>
@@ -114,7 +117,7 @@
             <div class="field-row-2">
               <div class="field">
                 <label for="c-name">Нэр <span style="color:var(--rose-500)">*</span></label>
-                <input id="c-name" type="text" class="input" required>
+                <input id="c-name" type="text" class="input" placeholder="Овог, нэр" required>
               </div>
               <div class="field">
                 <label for="c-phone">Утас <span style="color:var(--rose-500)">*</span></label>
@@ -124,12 +127,12 @@
 
             <div class="field">
               <label for="c-photo">Зураг</label>
-              <input id="c-photo" type="file" class="input" accept="image/*" style="padding:6px 12px">
+              <input id="c-photo" type="file" class="input" accept="image/jpeg,image/png,image/webp,image/gif" style="padding:6px 12px">
             </div>
 
             <p id="c-error" class="error-msg" style="display:none"></p>
             <div id="c-success" class="hidden" style="border-radius:var(--radius);background:var(--emerald-50);padding:12px 16px;font-size:14px;font-weight:500;color:var(--emerald-700)">
-              Амжилттай бүртгэгдлээ.
+              Амжилттай илгээгдлээ.
             </div>
 
             <div style="display:flex;justify-content:flex-end">
@@ -146,7 +149,7 @@
       <div class="chip-scroll" id="bag-chips"></div>
       <div class="field">
         <label style="font-size:13px;font-weight:600;color:var(--slate-700)">Хайлт</label>
-        <input class="input" id="station-search" type="text" placeholder="Код, нэр, байршил, хянагчаар хайх">
+        <input class="input" id="station-search" type="text" placeholder="Код, нэр, байршил эсвэл хянагчийн нэрээр хайх">
       </div>
     </div>
 
@@ -167,7 +170,7 @@
       <!-- Planned tasks (right) -->
       <div class="card card-sm section-stack">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <h2 style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">Төлөвлөгдсөн ажил</h2>
+          <h2 style="font-size:1.1rem;font-weight:700;color:var(--ink-900)">Төлөвлөсөн ажил</h2>
           <span id="planned-tasks-badge" class="hidden" style="border-radius:999px;background:var(--slate-100);padding:4px 10px;font-size:11px;font-weight:600;color:var(--slate-600)"></span>
         </div>
         <div id="planned-tasks-list" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -205,4 +208,3 @@
   <script type="module" src="/assets/js/pages/home.js"></script>
 </body>
 </html>
-

@@ -1,8 +1,8 @@
 import { requireAuth, getUser } from "../auth.js";
-import { getStations, getTickets, getTasks, getAdminMeta } from "../api.js";
+import { getStations, getTickets, getTasks, getAdminMeta, getStationDetail } from "../api.js";
 import { setupSidebar } from "../sidebar.js";
 import {
-  el, emptyState, spinner, escapeHtml, statusBadge, matchesStationSearch, getStatusMeta, getDeptName, getTeamName
+  el, emptyState, spinner, escapeHtml, statusBadge, formatDateTime, matchesStationSearch, getStatusMeta, getDeptName, getTeamName
 } from "../utils.js";
 
 requireAuth();
@@ -144,7 +144,7 @@ function renderViewFilters() {
 function renderStationPanel() {
   const title = el("station-panel-title");
   if (title) {
-    title.textContent = selectedBagNo ? `${selectedBagNo}-р багийн худгууд` : "Баг сонгоно уу";
+    title.textContent = selectedBagNo ? `${selectedBagNo}-р багийн ус түгээх байрууд` : "Баг сонгоно уу";
   }
   renderViewFilters();
   renderStationTable();
@@ -157,7 +157,7 @@ function renderStationTable() {
   const rows = visibleRows();
 
   if (rows.length === 0) {
-    wrap.innerHTML = emptyState("Тохирох худаг алга");
+    wrap.innerHTML = emptyState("Тохирох ус түгээх байр олдсонгүй.");
     return;
   }
 
@@ -168,7 +168,7 @@ function renderStationTable() {
         const deptName = getDeptName(deptId, departments);
         const teamName = getTeamName(teamId, teams, users);
         return `
-          <a href="/station.html?id=${station.id}" class="station-row-link" style="display:grid;grid-template-columns:88px minmax(0,1.1fr) 112px 136px 156px;align-items:center;gap:0;border-bottom:1px solid var(--slate-200);background:white;padding:12px 20px;text-decoration:none;transition:background 0.12s" onmouseover="this.style.background='var(--slate-50)'" onmouseout="this.style.background='white'">
+          <div class="station-row-link" data-station-id="${station.id}" style="display:grid;grid-template-columns:88px minmax(0,1.1fr) 112px 136px 156px;align-items:center;gap:0;border-bottom:1px solid var(--slate-200);background:white;padding:12px 20px;cursor:pointer;transition:background 0.12s">
             <div>
               <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.18em;color:var(--slate-400)">Код</p>
               <p style="font-size:20px;font-weight:800;line-height:1;color:var(--ink-900);margin-top:4px">${escapeHtml(station.code)}</p>
@@ -189,11 +189,15 @@ function renderStationTable() {
               <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.18em;color:var(--slate-400)">Засварын бригад</p>
               <p style="font-size:13px;font-weight:600;color:var(--slate-700);margin-top:4px">${escapeHtml(teamName)}</p>
             </div>
-          </a>
+          </div>
         `;
       }).join("")}
     </div>
   `;
+
+  wrap.querySelectorAll("[data-station-id]").forEach((row) => {
+    row.addEventListener("click", () => openStationModal(row.dataset.stationId));
+  });
 }
 
 function renderDeptFilter() {
@@ -255,6 +259,51 @@ async function init() {
   });
 }
 
+async function openStationModal(stationId) {
+  const modal = el("station-detail-modal");
+  el("sdm-code").textContent = "…";
+  el("sdm-location").textContent = "";
+  el("sdm-info").innerHTML = spinner();
+  el("sdm-tickets").innerHTML = "";
+  el("sdm-logs").innerHTML = "";
+  modal.classList.remove("hidden");
+
+  try {
+    const { station, tickets, maintenanceLogs } = await getStationDetail(stationId);
+
+    el("sdm-code").textContent = station.code;
+    el("sdm-location").textContent = station.location || "—";
+    el("sdm-info").innerHTML = `
+      <p><strong>Баг:</strong> ${station.bagNo}-р баг</p>
+      <p><strong>Байршил:</strong> ${escapeHtml(station.location || "—")}</p>
+      <p><strong>Хянагч:</strong> ${escapeHtml(station.caretakerName || "—")}</p>
+      <p><strong>Хянагчийн утас:</strong> ${escapeHtml(station.caretakerPhone || "—")}</p>
+    `;
+
+    el("sdm-tickets-title").textContent = `Засварын хүсэлт (${tickets.length})`;
+    el("sdm-tickets").innerHTML = tickets.length
+      ? tickets.map((t) => `
+          <div class="item-card" style="padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <strong style="font-size:13px">${escapeHtml(t.ticketNo)}</strong>
+              ${statusBadge(t.status)}
+            </div>
+            <p style="font-size:12px;color:var(--slate-600);margin-top:4px">${escapeHtml(t.issueType)}</p>
+            <p style="font-size:11px;color:var(--slate-400);margin-top:2px">${formatDateTime(t.createdAt)}</p>
+          </div>`)
+        .join("")
+      : `<p class="empty-state" style="padding:8px">Хүсэлт байхгүй</p>`;
+
+    el("sdm-logs-title").textContent = `Засварын түүх (${maintenanceLogs.length})`;
+    el("sdm-logs").innerHTML = maintenanceLogs.length
+      ? maintenanceLogs.map(maintenanceLogHtml).join("")
+      : `<p class="empty-state" style="padding:8px">Засварын түүх байхгүй</p>`;
+
+  } catch (err) {
+    el("sdm-info").innerHTML = `<p style="color:var(--rose-600)">Алдаа: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
 const ROLE_MAP = {
   dispatcher:          "/dispatcher.html",
   general_engineer:    "/engineer.html",
@@ -263,15 +312,40 @@ const ROLE_MAP = {
   admin:               "/admin.html",
 };
 
+function maintenanceLogHtml(m) {
+  const sourceLabel = m.sourceType === "task" ? "Төлөвлөгөөт ажил" : "Иргэний гомдол";
+  const originText = m.sourceType === "task"
+    ? (m.taskDescription || m.description || "")
+    : [m.ticketNo, m.issueType, m.complaintDescription].filter(Boolean).join(" · ");
+  const actor = m.completedByName || m.teamLeaderName || m.teamName || "Бригад";
+  return `
+    <div class="item-card" style="padding:10px 12px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="badge ${m.sourceType === "task" ? "badge-web" : "badge-assigned"}">${sourceLabel}</span>
+        <strong style="font-size:13px">${escapeHtml(m.teamName || "Бригад")}</strong>
+      </div>
+      ${originText ? `<p style="font-size:12px;color:var(--slate-600);margin-top:6px"><strong>Эх сурвалж:</strong> ${escapeHtml(originText)}</p>` : ""}
+      <p style="font-size:12px;color:var(--slate-600);margin-top:4px"><strong>Гүйцэтгэл:</strong> ${escapeHtml(m.description)}</p>
+      <p style="font-size:11px;color:var(--slate-500);margin-top:4px"><strong>Хэн:</strong> ${escapeHtml(actor)}${m.workerNames ? ` · ${escapeHtml(m.workerNames)}` : ""}</p>
+      ${m.materialsUsed ? `<p style="font-size:11px;color:var(--slate-400);margin-top:2px">Материал: ${escapeHtml(m.materialsUsed)}</p>` : ""}
+      <p style="font-size:11px;color:var(--slate-400);margin-top:2px">${formatDateTime(m.createdAt)}</p>
+    </div>`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupSidebar();
   const u = getUser();
   const link = document.getElementById("dashboard-link");
   if (link && u) link.href = ROLE_MAP[u.role] || "/app.html";
 
+  el("sdm-close")?.addEventListener("click", () => el("station-detail-modal")?.classList.add("hidden"));
+  el("station-detail-modal")?.addEventListener("click", (e) => {
+    if (e.target === el("station-detail-modal")) el("station-detail-modal").classList.add("hidden");
+  });
+
   init().catch(err => {
     console.error(err);
     const wrap = el("station-table-wrap");
-    if (wrap) wrap.innerHTML = `<div class="empty-state" style="color:var(--rose-600)">Өгөгдөл ачааллахад алдаа гарлаа</div>`;
+    if (wrap) wrap.innerHTML = `<div class="empty-state" style="color:var(--rose-600)">Мэдээлэл ачаалж чадсангүй.</div>`;
   });
 });

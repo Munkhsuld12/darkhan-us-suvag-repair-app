@@ -22,3 +22,12 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Google Drive sync temp files
+.tmp.driveupload/
+
+# Citizen-uploaded complaint photos (runtime data)
+frontend/uploads/
+
+# Local credentials notes
+LOGIN_INFO.txt

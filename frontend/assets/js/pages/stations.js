@@ -1,7 +1,7 @@
-import { getStations, getTickets, getTasks, getAdminMeta } from "../api.js";
+import { getStations, getTickets, getTasks, getAdminMeta, getStationDetail } from "../api.js";
 import {
   matchesStationSearch, getStatusMeta, getDeptName, getTeamName,
-  escapeHtml, emptyState, spinner,
+  escapeHtml, emptyState, spinner, statusBadge, formatDateTime,
 } from "../utils.js";
 
 let state = { stations: [], tickets: [], tasks: [], departments: [], teams: [], users: [] };
@@ -11,6 +11,69 @@ let statusFilter = "all";
 let deptFilter = "all";
 let viewFilter = "all"; // all | active | free
 
+const el = (id) => document.getElementById(id);
+
+function maintenanceLogHtml(m) {
+  const sourceLabel = m.sourceType === "task" ? "Төлөвлөгөөт ажил" : "Иргэний гомдол";
+  const originText = m.sourceType === "task"
+    ? (m.taskDescription || m.description || "")
+    : [m.ticketNo, m.issueType, m.complaintDescription].filter(Boolean).join(" · ");
+  const actor = m.completedByName || m.teamLeaderName || m.teamName || "Бригад";
+  return `
+    <div class="item-card" style="padding:10px 12px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="badge ${m.sourceType === "task" ? "badge-web" : "badge-assigned"}">${sourceLabel}</span>
+        <strong style="font-size:13px">${escapeHtml(m.teamName || "Бригад")}</strong>
+      </div>
+      ${originText ? `<p style="font-size:12px;color:var(--slate-600);margin-top:6px"><strong>Эх сурвалж:</strong> ${escapeHtml(originText)}</p>` : ""}
+      <p style="font-size:12px;color:var(--slate-600);margin-top:4px"><strong>Гүйцэтгэл:</strong> ${escapeHtml(m.description)}</p>
+      <p style="font-size:11px;color:var(--slate-500);margin-top:4px"><strong>Хэн:</strong> ${escapeHtml(actor)}${m.workerNames ? ` · ${escapeHtml(m.workerNames)}` : ""}</p>
+      ${m.materialsUsed ? `<p style="font-size:11px;color:var(--slate-400);margin-top:2px">Материал: ${escapeHtml(m.materialsUsed)}</p>` : ""}
+      <p style="font-size:11px;color:var(--slate-400);margin-top:2px">${formatDateTime(m.createdAt)}</p>
+    </div>`;
+}
+
+async function openStationModal(stationId) {
+  const modal = el("station-detail-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  el("sdm-code").textContent = "…";
+  el("sdm-location").textContent = "";
+  el("sdm-info").innerHTML = spinner();
+  el("sdm-tickets").innerHTML = "";
+  el("sdm-logs").innerHTML = "";
+
+  try {
+    const { station, tickets, maintenanceLogs } = await getStationDetail(stationId);
+    el("sdm-code").textContent = station.code;
+    el("sdm-location").textContent = station.location || "—";
+    el("sdm-info").innerHTML = `
+      <p><strong>Баг:</strong> ${station.bagNo}-р баг</p>
+      <p><strong>Байршил:</strong> ${escapeHtml(station.location || "—")}</p>
+      <p><strong>Хянагч:</strong> ${escapeHtml(station.caretakerName || "—")}</p>
+      <p><strong>Хянагчийн утас:</strong> ${escapeHtml(station.caretakerPhone || "—")}</p>
+    `;
+    el("sdm-tickets-title").textContent = `Засварын хүсэлт (${tickets.length})`;
+    el("sdm-tickets").innerHTML = tickets.length
+      ? tickets.map((t) => `
+          <div class="item-card" style="padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <strong style="font-size:13px">${escapeHtml(t.ticketNo)}</strong>
+              ${statusBadge(t.status)}
+            </div>
+            <p style="font-size:12px;color:var(--slate-600);margin-top:4px">${escapeHtml(t.issueType)}</p>
+            <p style="font-size:11px;color:var(--slate-400);margin-top:2px">${formatDateTime(t.createdAt)}</p>
+          </div>`).join("")
+      : `<p class="empty-state" style="padding:8px">Хүсэлт байхгүй</p>`;
+
+    el("sdm-logs-title").textContent = `Засварын түүх (${maintenanceLogs.length})`;
+    el("sdm-logs").innerHTML = maintenanceLogs.length
+      ? maintenanceLogs.map(maintenanceLogHtml).join("")
+      : `<p class="empty-state" style="padding:8px">Засварын түүх байхгүй</p>`;
+  } catch (err) {
+    el("sdm-info").innerHTML = `<p style="color:var(--rose-600)">Алдаа: ${escapeHtml(err.message)}</p>`;
+  }
+}
 // Read ?bag=X or ?query=... from URL
 const urlParams = new URLSearchParams(window.location.search);
 const initBag = urlParams.get("bag");
@@ -19,7 +82,19 @@ const initQuery = urlParams.get("query") ?? "";
 // Responsive breakpoint
 const isDesktop = () => window.innerWidth >= 1280;
 
+// Document-level delegation for station row clicks (set up at module load, before DOMContentLoaded)
+document.addEventListener("click", (e) => {
+  const row = e.target.closest("[data-station-id]");
+  if (row) openStationModal(row.dataset.stationId);
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
+  // Close handlers
+  el("sdm-close")?.addEventListener("click", () => el("station-detail-modal")?.classList.add("hidden"));
+  el("station-detail-modal")?.addEventListener("click", (e) => {
+    if (e.target === el("station-detail-modal")) el("station-detail-modal").classList.add("hidden");
+  });
+
   showSpinners();
 
   // Header scroll-to-hide
@@ -47,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     state.teams       = metaRes.teams ?? [];
     state.users       = metaRes.users ?? [];
   } catch {
-    document.getElementById("station-table-mobile").innerHTML = emptyState("Өгөгдөл ачааллахад алдаа гарлаа");
+    document.getElementById("station-table-mobile").innerHTML = emptyState("Мэдээлэл ачаалж чадсангүй.");
     return;
   }
 
@@ -223,7 +298,7 @@ function renderBagFolderGrid(bags, allEntries) {
   });
 
   // Update folder titles
-  const title = selectedBag ? `${selectedBag}-р багийн худгууд` : "—";
+  const title = selectedBag ? `${selectedBag}-р багийн ус түгээх байрууд` : "—";
   const titleMobile  = document.getElementById("folder-title-mobile");
   const titleDesktop = document.getElementById("folder-title-desktop");
   if (titleMobile)  titleMobile.textContent = title;
@@ -261,17 +336,14 @@ function renderViewFilterChips(allEntries) {
 function renderStationTable() {
   const rows = visibleRows();
   const tableHtml = rows.length === 0
-    ? emptyState("Тохирох худаг алга")
+    ? emptyState("Тохирох ус түгээх байр олдсонгүй.")
     : `<div class="table-shell">${rows.map(({ station, departmentId, teamId, status }) => {
         const meta = getStatusMeta(status);
         return `
-          <a href="/station.html?id=${escapeHtml(station.id)}" style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--slate-200);background:white;padding:16px;text-decoration:none;transition:background 0.12s" onmouseover="this.style.background='var(--slate-50)'" onmouseout="this.style.background='white'">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-              <div>
-                <p style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:var(--slate-400)">Код</p>
-                <p style="font-size:1.25rem;font-weight:800;line-height:1;color:var(--ink-900);margin-top:4px">${escapeHtml(station.code)}</p>
-              </div>
-              <span class="badge ${meta.badgeClass}">${meta.label}</span>
+          <div data-station-id="${station.id}" class="station-row-clickable" style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--slate-200);background:white;padding:16px;cursor:pointer;transition:background 0.12s">
+            <div>
+              <p style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:var(--slate-400)">Код</p>
+              <p style="font-size:1.25rem;font-weight:800;line-height:1;color:var(--ink-900);margin-top:4px">${escapeHtml(station.code)}</p>
             </div>
             <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr">
               <div style="grid-column:span 3">
@@ -287,7 +359,7 @@ function renderStationTable() {
                 <p style="font-size:13px;font-weight:600;color:var(--slate-700);margin-top:4px">${escapeHtml(getTeamName(teamId, state.teams, state.users))}</p>
               </div>
             </div>
-          </a>`;
+          </div>`;
       }).join("")}</div>`;
 
   const mobileEl  = document.getElementById("station-table-mobile");

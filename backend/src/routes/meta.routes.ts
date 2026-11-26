@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { query } from "../db";
-import { requireAuth } from "../middleware/auth.middleware";
-
+import { optionalAuth } from "../middleware/auth.middleware";
 const router = Router();
 
-// GET /api/meta — master data for all authenticated internal users
-router.get("/", requireAuth, async (_req, res) => {
+// GET /api/meta — master data. Нийтийн хуудсанд бригадын ахлагчийн нэр хэрэгтэй тул
+// нэвтрээгүй хүнд зөвхөн ахлагчдын id + нэрийг өгнө (нэвтрэх нэр, утас, эрхийг нуух).
+router.get("/", optionalAuth, async (req, res) => {
   try {
     const [depts, teams, users, stations] = await Promise.all([
       query("SELECT id, name FROM departments WHERE deleted_at IS NULL ORDER BY name"),
@@ -20,10 +20,14 @@ router.get("/", requireAuth, async (_req, res) => {
       teams: teams.rows.map((r: Record<string, unknown>) => ({
         id: r.id, name: r.name, departmentId: r.department_id, leaderUserId: r.leader_user_id,
       })),
-      users: users.rows.map((r: Record<string, unknown>) => ({
-        id: r.id, fullName: r.full_name, username: r.username,
-        role: r.role, departmentId: r.department_id, teamId: r.team_id, phone: r.phone,
-      })),
+      users: req.user
+        ? users.rows.map((r: Record<string, unknown>) => ({
+            id: r.id, fullName: r.full_name, username: r.username,
+            role: r.role, departmentId: r.department_id, teamId: r.team_id, phone: r.phone,
+          }))
+        : users.rows
+            .filter((r: Record<string, unknown>) => teams.rows.some((t: Record<string, unknown>) => t.leader_user_id === r.id))
+            .map((r: Record<string, unknown>) => ({ id: r.id, fullName: r.full_name })),
       stations: stations.rows.map((r: Record<string, unknown>) => ({
         id: r.id, code: r.code, name: r.name, bagNo: r.bag_no,
         location: r.location, caretakerName: r.caretaker_name, caretakerPhone: r.caretaker_phone,

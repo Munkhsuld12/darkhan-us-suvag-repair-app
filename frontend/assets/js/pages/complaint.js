@@ -1,4 +1,4 @@
-import { getStations, submitComplaint } from "../api.js";
+import { getStations, submitComplaint, getEditableComplaint, updateComplaint } from "../api.js";
 import { issueTypeOptions } from "../seed.js";
 import { escapeHtml, el } from "../utils.js";
 
@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const successEl    = el("complaint-success");
   const stationInput = el("stationQuery");
   const stationDrop  = el("station-dropdown");
+  const submitBtn    = form.querySelector("button[type=submit]");
+  let editState      = null;
 
   const attachHandlers = () => {
     stationDrop.querySelectorAll(".station-dropdown-item").forEach((item) => {
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         list.map((s) => `
           <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
             <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
-            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил тодорхойгүй")}</span>
           </div>`).join("");
     }).join("");
     attachHandlers();
@@ -71,9 +73,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       ? matches.map((s) => `
           <div class="station-dropdown-item" data-id="${escapeHtml(s.id)}">
             <span class="station-dropdown-code">${escapeHtml(s.code)}</span>
-            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил оруулаагүй")}</span>
+            <span class="station-dropdown-loc">${escapeHtml(s.location || "Байршил тодорхойгүй")}</span>
           </div>`).join("")
-      : `<div class="station-dropdown-empty">Тохирох байр олдсонгүй</div>`;
+      : `<div class="station-dropdown-empty">Тохирох ус түгээх байр олдсонгүй.</div>`;
     attachHandlers();
     stationDrop.classList.remove("hidden");
   });
@@ -97,11 +99,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const btn = form.querySelector("button[type=submit]");
-    btn.disabled = true;
+    submitBtn.disabled = true;
 
     try {
-      await submitComplaint({
+      const payload = {
         stationId: station.id,
         issueType: el("issueType").value,
         description: el("description").value.trim(),
@@ -109,15 +110,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         phoneNumber: el("phoneNumber").value.trim(),
         source: "web",
         createdByLabel: "Иргэн",
-      });
+      };
 
-      form.reset();
-      stationInput.value = "";
+      if (editState) {
+        await updateComplaint(editState.id, { ...payload, token: editState.token });
+        successEl.textContent = "Өөрчлөлт хадгалагдлаа.";
+      } else {
+        const data = await submitComplaint(payload);
+        const editUrl = `${location.origin}/complaint.html?editComplaint=${encodeURIComponent(data.id)}&editToken=${encodeURIComponent(data.editToken)}`;
+        localStorage.setItem("dhs_last_complaint_edit", JSON.stringify({ id: data.id, token: data.editToken, editUrl }));
+        successEl.innerHTML = `
+          <div>Таны гомдол амжилттай бүртгэгдлээ.</div>
+          <a href="${escapeHtml(editUrl)}" class="btn btn-secondary btn-sm" style="margin-top:8px;display:inline-flex">Хүсэлтээ засах</a>
+        `;
+        form.reset();
+        stationInput.value = "";
+      }
+
       successEl.classList.remove("hidden");
     } catch (err) {
       errEl.textContent = err.message || "Алдаа гарлаа. Дахин оролдоно уу.";
     } finally {
-      btn.disabled = false;
+      submitBtn.disabled = false;
     }
   });
+
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("editComplaint");
+  const editToken = params.get("editToken");
+  if (editId && editToken) {
+    try {
+      const { complaint } = await getEditableComplaint(editId, editToken);
+      editState = { id: editId, token: editToken };
+      document.querySelector(".page-header h1").textContent = "Гомдол засах";
+      submitBtn.textContent = "Өөрчлөлт хадгалах";
+      const station = stations.find((s) => s.id === complaint.stationId);
+      selectedStation = station ?? null;
+      stationInput.value = station?.code ?? complaint.stationCode ?? "";
+      el("issueType").value = complaint.issueType ?? "";
+      el("description").value = complaint.description ?? "";
+      el("citizenName").value = complaint.citizenName ?? "";
+      el("phoneNumber").value = complaint.phoneNumber ?? "";
+    } catch (err) {
+      errEl.textContent = err.message || "Засах хүсэлт олдсонгүй";
+    }
+  }
 });

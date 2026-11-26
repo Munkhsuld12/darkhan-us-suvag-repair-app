@@ -1,11 +1,14 @@
 // Mongolian constants — kept in sync with backend seed data
 
 export const issueTypeOptions = [
-  "Насос ажиллахгүй",
+  "Ус гарахгүй",
+  "Усны даралт бага",
+  "Ус бохирдсон",
   "Дэлгэц ажиллахгүй",
-  "Цахилгааны асуудал",
-  "Ус гоожиж байна",
-  "Хаалга/цоож эвдэрсэн",
+  "Тооцоо буруу",
+  "Цахилгааны гэмтэл",
+  "Хоолой хагарсан",
+  "Тоолуур эвдэрсэн",
   "Бусад",
 ];
 
@@ -29,7 +32,7 @@ export const sourceLabels = {
 
 export const complaintStatusLabels = {
   new:       "Шинэ",
-  converted: "Хөрвүүлсэн",
+  converted: "Хүсэлт болгосон",
 };
 
 export const roleLabels = {
@@ -38,6 +41,7 @@ export const roleLabels = {
   general_engineer:     "Ерөнхий инженер",
   department_engineer:  "Хэлтсийн инженер",
   brigade_leader:       "Багийн ахлагч",
+  worker:               "Ажилтан",
 };
 
 export const reportTypeLabels = {
@@ -48,10 +52,22 @@ export const reportTypeLabels = {
   performance: "Гүйцэтгэлийн тойм",
 };
 
+export const materialOptions = [
+  "Насос",
+  "Хоолой",
+  "Хавхлага",
+  "Тоолуур",
+  "Мэдрэгч",
+  "Залгуур",
+  "Шүүлтүүр",
+  "Клип / Боолт",
+];
+
 export const roleOptions = [
   "admin",
   "dispatcher",
   "general_engineer",
   "department_engineer",
   "brigade_leader",
+  "worker",
 ];

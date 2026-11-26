@@ -42,7 +42,7 @@
         <!-- Summary cards -->
         <div class="compact-grid compact-grid-4">
           <div class="summary-card tone-brand">
-            <p class="label">Веб</p>
+            <p class="label">Вэб</p>
             <p class="value" id="sum-web">0</p>
           </div>
           <div class="summary-card tone-amber">
@@ -62,10 +62,10 @@
         <!-- Phone form + Workload -->
         <div class="panel-grid panel-grid-dispatcher">
           <div class="card section-stack">
-            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Утасаар бүртгэх</h2>
+            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Утсаар бүртгэх</h2>
             <form id="phone-form" class="field-grid">
               <div class="field">
-                <label for="phone-station-code">Худгийн код</label>
+                <label for="phone-station-code">Ус түгээх байрны код</label>
                 <input id="phone-station-code" type="text" class="input" placeholder="Жишээ: 1-5" required autocomplete="off">
               </div>
               <div class="field">
@@ -100,18 +100,24 @@
 
         <!-- Complaints + Tickets -->
         <div class="panel-grid panel-grid-2">
-          <div class="card section-stack" style="min-height:360px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
-              <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Ирсэн хүсэлт</h2>
-              <span id="complaints-count" class="badge badge-normal" style="display:none"></span>
+          <div class="card section-stack" style="min-height:360px;border-top:3px solid var(--amber-400)">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <div>
+                <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Ирсэн хүсэлт</h2>
+                <p style="font-size:12px;color:var(--amber-600);font-weight:500;margin-top:3px">Иргэдийн гомдол · Бүртгэхийг хүлээж байна</p>
+              </div>
+              <span id="complaints-count" class="badge" style="display:none;background:var(--amber-100);color:var(--amber-700)"></span>
             </div>
             <div id="complaints-list" class="section-stack scroll-pane" style="margin-top:4px"></div>
           </div>
 
-          <div class="card section-stack" style="min-height:360px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
-              <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Засварын хүсэлт</h2>
-              <span id="tickets-count" class="badge badge-normal" style="display:none"></span>
+          <div class="card section-stack" style="min-height:360px;border-top:3px solid var(--brand-500)">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
+              <div>
+                <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Засварын хүсэлт</h2>
+                <p style="font-size:12px;color:var(--brand-600);font-weight:500;margin-top:3px">Бүртгэгдсэн хүсэлт · Бригадад хуваарилах</p>
+              </div>
+              <span id="tickets-count" class="badge" style="display:none;background:var(--blue-100);color:var(--blue-700)"></span>
             </div>
             <div id="tickets-list" class="section-stack scroll-pane" style="margin-top:4px"></div>
           </div>
@@ -131,7 +137,7 @@
         <form id="ticket-form" class="field-grid">
           <div class="field">
             <label for="tm-station">Ус түгээх байр</label>
-            <input id="tm-station" type="text" class="input" list="station-datalist" placeholder="Код, нэр, байршил, хянагчаар хайх" autocomplete="off" required>
+            <input id="tm-station" type="text" class="input" list="station-datalist" placeholder="Код, нэр, байршил эсвэл хянагчийн нэрээр хайх" autocomplete="off" required>
             <datalist id="station-datalist"></datalist>
             <input type="hidden" id="tm-station-id">
           </div>
@@ -212,6 +218,38 @@
           <div style="display:flex;gap:10px;justify-content:flex-end">
             <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
             <button type="submit" class="btn btn-primary">Хуваарилах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick-assign complaint → ticket modal -->
+  <div id="complaint-assign-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header">
+        <h2>Бригадад хуваарилах</h2>
+        <button class="modal-close" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="cam-info" style="background:var(--slate-50);border:1px solid var(--slate-200);border-radius:10px;padding:12px 14px;margin-bottom:16px"></div>
+        <form id="complaint-assign-form" class="field-grid">
+          <div class="field">
+            <label for="cam-team">Засварын бригад</label>
+            <select id="cam-team" class="select" required>
+              <option value="">Засварын бригад сонгох</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cam-priority">Яаралт</label>
+            <select id="cam-priority" class="select">
+              <option value="normal">Энгийн</option>
+              <option value="urgent">Яаралтай</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
+            <button type="submit" class="btn btn-primary">Хадгалах</button>
           </div>
         </form>
       </div>

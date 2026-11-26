@@ -17,8 +17,8 @@ router.get("/overview", requireAuth, async (req, res) => {
       taskFilter = " WHERE team_id = $1";
       params.push(user.teamId);
     } else if (user.role === "department_engineer" && user.departmentId) {
-      ticketFilter = " WHERE department_id = $1";
-      taskFilter = " WHERE department_id = $1";
+      ticketFilter = " WHERE (department_id = $1 OR team_id IN (SELECT id FROM teams WHERE department_id = $1 AND deleted_at IS NULL))";
+      taskFilter = " WHERE (department_id = $1 OR team_id IN (SELECT id FROM teams WHERE department_id = $1 AND deleted_at IS NULL))";
       params.push(user.departmentId);
     }
 
@@ -65,8 +65,9 @@ router.get("/", requireAuth, async (req, res) => {
       ticketSql += ` AND t.team_id = $${pi++}`;
       ticketParams.push(user.teamId);
     } else if (isDeptEngineer && user.departmentId) {
-      ticketSql += ` AND t.department_id = $${pi++}`;
+      ticketSql += ` AND (t.department_id = $${pi} OR t.team_id IN (SELECT id FROM teams WHERE department_id = $${pi} AND deleted_at IS NULL))`;
       ticketParams.push(user.departmentId);
+      pi++;
     }
     if (dateFrom) { ticketSql += ` AND t.created_at >= $${pi++}`; ticketParams.push(dateFrom); }
     if (dateTo)   { ticketSql += ` AND t.created_at <= $${pi++}::date + interval '1 day'`; ticketParams.push(dateTo); }
@@ -88,8 +89,9 @@ router.get("/", requireAuth, async (req, res) => {
       taskSql += ` AND team_id = $${pi++}`;
       taskParams.push(user.teamId);
     } else if (isDeptEngineer && user.departmentId) {
-      taskSql += ` AND department_id = $${pi++}`;
+      taskSql += ` AND (department_id = $${pi} OR team_id IN (SELECT id FROM teams WHERE department_id = $${pi} AND deleted_at IS NULL))`;
       taskParams.push(user.departmentId);
+      pi++;
     }
     if (dateFrom) { taskSql += ` AND task_date >= $${pi++}`; taskParams.push(dateFrom); }
     if (dateTo)   { taskSql += ` AND task_date <= $${pi++}`; taskParams.push(dateTo); }
@@ -106,7 +108,7 @@ router.get("/", requireAuth, async (req, res) => {
     let complaintSql = "SELECT * FROM complaints WHERE 1=1";
     const complaintParams: unknown[] = [];
     pi = 1;
-    const hasFullAccess = ["admin", "dispatcher", "general_engineer"].includes(user.role);
+    const hasFullAccess = ["admin", "dispatcher", "general_engineer", "department_engineer"].includes(user.role);
     if (!hasFullAccess) {
       complaintSql += " AND 1=0"; // no access
     } else {
@@ -129,7 +131,19 @@ router.get("/", requireAuth, async (req, res) => {
       mlSql += ` AND team_id = $${pi++}`;
       mlParams.push(user.teamId);
     } else if (isDeptEngineer && user.departmentId) {
-      mlSql += ` AND (EXISTS (SELECT 1 FROM tickets t WHERE t.id = ticket_id AND t.department_id = $${pi}) OR EXISTS (SELECT 1 FROM tasks tk WHERE tk.id = task_id AND tk.department_id = $${pi}))`;
+      mlSql += ` AND (
+        team_id IN (SELECT id FROM teams WHERE department_id = $${pi} AND deleted_at IS NULL)
+        OR EXISTS (
+          SELECT 1 FROM tickets t
+          WHERE t.id = ticket_id
+            AND (t.department_id = $${pi} OR t.team_id IN (SELECT id FROM teams WHERE department_id = $${pi} AND deleted_at IS NULL))
+        )
+        OR EXISTS (
+          SELECT 1 FROM tasks tk
+          WHERE tk.id = task_id
+            AND (tk.department_id = $${pi} OR tk.team_id IN (SELECT id FROM teams WHERE department_id = $${pi} AND deleted_at IS NULL))
+        )
+      )`;
       mlParams.push(user.departmentId);
       pi++;
     }

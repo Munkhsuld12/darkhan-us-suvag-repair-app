@@ -61,7 +61,7 @@ router.get("/", requireAuth, async (req, res) => {
       sql += " WHERE team_id = $1";
       params.push(user.teamId);
     } else if (user.role === "department_engineer" && user.departmentId) {
-      sql += " WHERE department_id = $1";
+      sql += " WHERE (department_id = $1 OR team_id IN (SELECT id FROM teams WHERE department_id = $1 AND deleted_at IS NULL))";
       params.push(user.departmentId);
     }
 
@@ -79,11 +79,13 @@ router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, re
   try {
     const {
       complaintId, stationId, departmentId, teamId,
-      issueType, description, priority, source, createdBy,
+      issueType, description, priority, source,
     } = req.body as {
       complaintId?: string; stationId: string; departmentId?: string; teamId?: string;
-      issueType: string; description: string; priority: string; source: string; createdBy: string;
+      issueType: string; description: string; priority: string; source: string;
     };
+    // Үйлдэл хийсэн хүнийг хүсэлтийн биеэс биш, нэвтэрсэн token-оос авна
+    const createdBy = req.user!.id;
 
     if (!stationId || !issueType || !source) {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" });
@@ -141,9 +143,10 @@ router.post("/", requireAuth, requireRole("admin", "dispatcher"), async (req, re
 router.patch("/:id/assign", requireAuth, requireRole("admin", "dispatcher"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { departmentId, teamId, priority, assignedBy } = req.body as {
-      departmentId: string; teamId: string; priority: string; assignedBy: string;
+    const { departmentId, teamId, priority } = req.body as {
+      departmentId: string; teamId: string; priority: string;
     };
+    const assignedBy = req.user!.id;
     const status = buildStatus(priority || "normal", Boolean(teamId));
     const now = new Date().toISOString();
 
@@ -264,7 +267,7 @@ router.patch("/:id/finish", requireAuth, requireRole("brigade_leader"), async (r
     await client.query("DELETE FROM ticket_workers WHERE ticket_id = $1", [id]);
     for (const workerId of workerIds ?? []) {
       await client.query(
-        "INSERT INTO ticket_workers (id, ticket_id, user_id) VALUES ($1,$2,$3)",
+        "INSERT INTO ticket_workers (id, ticket_id, worker_id) VALUES ($1,$2,$3)",
         [randomUUID(), id, workerId]
       );
     }

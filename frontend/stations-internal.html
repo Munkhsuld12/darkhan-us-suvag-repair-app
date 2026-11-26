@@ -46,13 +46,13 @@
           <div id="station-panel" class="card section-stack" style="overflow:hidden">
             <div class="section-stack" style="border-bottom:1px solid var(--slate-200);padding-bottom:14px">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                <h2 id="station-panel-title" style="font-size:22px;font-weight:700;color:var(--ink-900)">— -р багийн худгууд</h2>
+                <h2 id="station-panel-title" style="font-size:22px;font-weight:700;color:var(--ink-900)">—-р багийн ус түгээх байрууд</h2>
               </div>
 
               <div style="display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr">
                 <div class="field">
                   <label for="search-input">Ус түгээх байр хайх</label>
-                  <input id="search-input" type="text" class="input" placeholder="Код, нэр, байршил, хянагчаар хайх">
+                  <input id="search-input" type="text" class="input" placeholder="Код, нэр, байршил эсвэл хянагчийн нэрээр хайх">
                 </div>
                 <div class="field">
                   <label for="status-filter">Төлөв</label>
@@ -77,6 +77,32 @@
             </div>
 
             <div id="station-table-wrap" class="scroll-pane"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Station detail modal -->
+  <div id="station-detail-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-header">
+        <div>
+          <h2 id="sdm-code" style="font-size:20px;font-weight:800"></h2>
+          <p id="sdm-location" style="font-size:13px;color:var(--slate-500);margin-top:2px"></p>
+        </div>
+        <button class="modal-close" id="sdm-close">✕</button>
+      </div>
+      <div class="modal-body" style="max-height:72vh;overflow-y:auto">
+        <div id="sdm-info" style="display:grid;gap:6px;font-size:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--slate-200)"></div>
+        <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr">
+          <div>
+            <p id="sdm-tickets-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin-bottom:8px"></p>
+            <div id="sdm-tickets" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div>
+            <p id="sdm-logs-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin-bottom:8px"></p>
+            <div id="sdm-logs" style="display:flex;flex-direction:column;gap:8px"></div>
           </div>
         </div>
       </div>

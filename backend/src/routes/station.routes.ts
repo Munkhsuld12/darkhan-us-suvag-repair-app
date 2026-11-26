@@ -66,9 +66,33 @@ router.get("/:id", async (req, res) => {
     );
 
     const maintenanceRes = await query<Record<string, unknown>>(
-      `SELECT ml.*, t.name AS team_name
+      `SELECT ml.*, tm.name AS team_name, leader.full_name AS team_leader_name,
+              CASE WHEN ml.ticket_id IS NOT NULL THEN 'complaint' ELSE 'task' END AS source_type,
+              tk.ticket_no, tk.issue_type AS ticket_issue_type, tk.description AS ticket_description,
+              c.citizen_name, c.phone_number,
+              task.description AS task_description, task.task_date,
+              finish_user.full_name AS completed_by_name,
+              workers.worker_names
        FROM maintenance_logs ml
-       LEFT JOIN teams t ON t.id = ml.team_id
+       LEFT JOIN teams tm ON tm.id = ml.team_id
+       LEFT JOIN users leader ON leader.id = tm.leader_user_id
+       LEFT JOIN tickets tk ON tk.id = ml.ticket_id
+       LEFT JOIN complaints c ON c.id = tk.complaint_id
+       LEFT JOIN tasks task ON task.id = ml.task_id
+       LEFT JOIN LATERAL (
+         SELECT u.full_name
+         FROM ticket_logs tl
+         LEFT JOIN users u ON u.id = tl.user_id
+         WHERE tl.ticket_id = ml.ticket_id AND tl.action = 'Ажил дууссан'
+         ORDER BY tl.logged_at DESC
+         LIMIT 1
+       ) finish_user ON true
+       LEFT JOIN (
+         SELECT tw.ticket_id, string_agg(w.full_name, ', ' ORDER BY w.full_name) AS worker_names
+         FROM ticket_workers tw
+         LEFT JOIN workers w ON w.id = tw.worker_id
+         GROUP BY tw.ticket_id
+       ) workers ON workers.ticket_id = ml.ticket_id
        WHERE ml.ticket_id IN (SELECT id FROM tickets WHERE station_id = $1)
           OR ml.task_id IN (SELECT id FROM tasks WHERE station_id = $1)
        ORDER BY ml.created_at DESC LIMIT 20`,
@@ -87,6 +111,12 @@ router.get("/:id", async (req, res) => {
         id: r.id, teamName: r.team_name, description: r.description,
         materialsUsed: r.materials_used, startedAt: r.started_at,
         finishedAt: r.finished_at, createdAt: r.created_at,
+        sourceType: r.source_type, ticketNo: r.ticket_no,
+        issueType: r.ticket_issue_type, complaintDescription: r.ticket_description,
+        citizenName: r.citizen_name, citizenPhone: r.phone_number,
+        taskDescription: r.task_description, taskDate: r.task_date,
+        completedByName: r.completed_by_name, teamLeaderName: r.team_leader_name,
+        workerNames: r.worker_names,
       })),
     });
   } catch (err) {

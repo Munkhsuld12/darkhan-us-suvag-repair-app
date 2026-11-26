@@ -83,10 +83,18 @@ INSERT INTO ticket_logs (id, ticket_id, user_id, action, note, logged_at) VALUES
   ('ticket-log-5', 'ticket-3', 'user-oyun',       'Ажил дууссан',             'Цоож сольж, хаалганы тэнхлэгийг тохируулсан.',           '2026-03-30T10:25:00Z')
 ON CONFLICT (id) DO NOTHING;
 
+-- ── Workers (бригадын гишүүд — нэвтрэх эрхгүй) ────────────────
+-- id-ууд seed_demo.sql-тэй ижил тул хоёуланг нь ачаалахад зөрчилдөхгүй
+INSERT INTO workers (id, full_name, phone, position, team_id) VALUES
+  ('w-dorj-1', 'Нямдорж Галаа',   '9922-3344', 'Сантехникч', 'team-2'),
+  ('w-oyun-1', 'Баярсайхан Мөнх', '9933-4455', 'Сантехникч', 'team-3')
+ON CONFLICT (id) DO NOTHING;
+
 -- ── Ticket workers ────────────────────────────────────────────
-INSERT INTO ticket_workers (id, ticket_id, user_id) VALUES
-  ('ticket-worker-1', 'ticket-2', 'user-dorj'),
-  ('ticket-worker-2', 'ticket-3', 'user-oyun')
+-- worker_id нь workers хүснэгтийг заана (users биш)
+INSERT INTO ticket_workers (id, ticket_id, worker_id) VALUES
+  ('ticket-worker-1', 'ticket-2', 'w-dorj-1'),
+  ('ticket-worker-2', 'ticket-3', 'w-oyun-1')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Tasks ─────────────────────────────────────────────────────

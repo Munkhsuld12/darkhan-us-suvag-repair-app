@@ -15,16 +15,16 @@ const PUBLIC_PAGES = ["/", "/index.html", "/stations.html", "/station.html", "/c
 const isPublicPage = () => PUBLIC_PAGES.some((p) => window.location.pathname === p || window.location.pathname === "");
 
 const handle = async (res) => {
-  if (res.status === 401) {
-    clearSession();
-    if (!isPublicPage()) window.location.href = "/?login=1";
-    throw new Error("Нэвтрэх шаардлагатай");
-  }
   let data;
   try {
     data = await res.json();
   } catch {
     throw new Error(`Серверийн хариу буруу формат (HTTP ${res.status})`);
+  }
+  if (res.status === 401) {
+    clearSession();
+    if (!isPublicPage()) window.location.href = "/?login=1";
+    throw new Error(data?.message || "Нэвтрэх шаардлагатай");
   }
   if (!data.ok && !res.ok) {
     throw new Error(data.message || `HTTP ${res.status}`);
@@ -41,10 +41,29 @@ const del  = (url)       => fetch(BASE + url, { method: "DELETE", headers: heade
 // ── Auth ──
 export const login = (username, password) => post("/api/auth/login", { username, password });
 export const getMe = () => get("/api/auth/me");
+export const updateProfile = (body) => patch("/api/auth/profile", body);
 
 // ── Complaints ──
 export const getComplaints = () => get("/api/complaints");
-export const submitComplaint = (body) => post("/api/complaints", body);
+const sendComplaintForm = (url, method, body, photoFile) => {
+  const fd = new FormData();
+  Object.entries(body).forEach(([k, v]) => { if (v != null) fd.append(k, String(v)); });
+  if (photoFile) fd.append("photo", photoFile);
+  const token = getToken();
+  return fetch(url, {
+    method,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  }).then(handle);
+};
+export const submitComplaint = (body, photoFile) => {
+  if (photoFile) return sendComplaintForm("/api/complaints", "POST", body, photoFile);
+  return post("/api/complaints", body);
+};
+export const getEditableComplaint = (id, token) =>
+  get(`/api/complaints/${encodeURIComponent(id)}/edit?token=${encodeURIComponent(token)}`);
+export const updateComplaint = (id, body, photoFile) =>
+  sendComplaintForm(`/api/complaints/${encodeURIComponent(id)}`, "PATCH", body, photoFile);
 
 // ── Tickets ──
 export const getTickets = () => get("/api/tickets");
@@ -90,6 +109,13 @@ export const restoreDepartment = (id) => post(`/api/admin/departments/${id}/rest
 export const restoreTeam       = (id) => post(`/api/admin/teams/${id}/restore`, {});
 export const restoreUser       = (id) => post(`/api/admin/users/${id}/restore`, {});
 export const restoreStation    = (id) => post(`/api/admin/stations/${id}/restore`, {});
+export const resetUserPassword = (id) => post(`/api/admin/users/${id}/reset-password`, {});
+
+// ── Workers (brigade members without system login) ──
+export const getWorkers = () => get("/api/workers");
+export const createWorker = (body) => post("/api/workers", body);
+export const updateWorker = (id, body) => put(`/api/workers/${id}`, body);
+export const deleteWorker = (id) => del(`/api/workers/${id}`);
 
 // ── Public Stations ──
 export const getStations = (params = {}) => {

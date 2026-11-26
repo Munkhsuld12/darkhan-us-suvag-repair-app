@@ -4,13 +4,61 @@ import { roleLabels, roleOptions } from "../seed.js";
 import { getDeptName, escapeHtml, el, emptyState } from "../utils.js";
 import { setupSidebar } from "../sidebar.js";
 
-let state = { departments: [], teams: [], users: [], stations: [] };
+let state = { departments: [], teams: [], users: [], stations: [], workers: [] };
 let activeTab = "departments";
+
+function generateTempPassword() {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const digits  = "23456789";
+  let pwd = "";
+  for (let i = 0; i < 3; i++) pwd += letters[Math.floor(Math.random() * letters.length)];
+  for (let i = 0; i < 4; i++) pwd += digits[Math.floor(Math.random() * digits.length)];
+  return pwd;
+}
+
+function showTempPasswordModal(username, pwd) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:400px;text-align:center">
+      <div class="modal-header" style="justify-content:center;border-bottom:none;padding-bottom:0">
+        <h2>Түр нууц үг</h2>
+      </div>
+      <div class="modal-body" style="padding-top:12px">
+        <p style="font-size:14px;color:var(--slate-600);margin-bottom:20px">
+          <strong>${escapeHtml(username)}</strong> хэрэглэгчид дараах түр нууц үгийг утсаар эсвэл биечлэн мэдэгдэнэ үү.
+        </p>
+        <div style="background:var(--slate-100);border-radius:12px;padding:20px;margin-bottom:12px">
+          <span style="font-size:2rem;font-weight:800;letter-spacing:0.15em;color:var(--ink-900);font-family:monospace">${escapeHtml(pwd)}</span>
+        </div>
+        <p style="font-size:12px;color:var(--slate-400);margin-bottom:20px">Хэрэглэгч нэвтэрсний дараа нууц үгээ заавал өөрчлөх болно.</p>
+        <button class="btn btn-primary btn-full" id="tmp-pwd-ok">Ойлголоо</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#tmp-pwd-ok").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   setupSidebar();
   const user = requireAuth();
   if (!user || user.role !== "admin") { window.location.href = "/app.html"; return; }
+
+  // Verify token is valid and user still has admin role in DB
+  try {
+    const me = await api.getMe();
+    if (!me?.user || me.user.role !== "admin") {
+      alert("Эрх хүрэлцэхгүй байна. Дахин нэвтэрнэ үү.");
+      const { logout } = await import("../auth.js");
+      logout();
+      return;
+    }
+  } catch {
+    const { logout } = await import("../auth.js");
+    logout();
+    return;
+  }
 
   el("modal-close-btn").addEventListener("click", closeModal);
   let _mouseDownOnOverlay = false;
@@ -23,11 +71,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadMeta() {
-  const data = await api.getAdminMeta().catch(() => ({ departments: [], teams: [], users: [], stations: [] }));
+  const [data, workerRes] = await Promise.all([
+    api.getAdminMeta().catch(() => ({ departments: [], teams: [], users: [], stations: [] })),
+    api.getWorkers().catch(() => ({ workers: [] })),
+  ]);
   state.departments = data.departments ?? [];
   state.teams       = data.teams ?? [];
   state.users       = data.users ?? [];
   state.stations    = data.stations ?? [];
+  state.workers     = workerRes.workers ?? [];
 }
 
 function setupTabs() {
@@ -129,21 +181,68 @@ function renderTeams() {
   el("team-add-btn").onclick = () => openTeamModal(null);
 
   const list = el("team-list");
-  list.innerHTML = !state.teams.length ? emptyState() : state.teams.map((t) => `
+  list.innerHTML = !state.teams.length ? emptyState() : state.teams.map((t) => {
+    const members = state.users.filter((u) => u.teamId === t.id);
+    const leader  = state.users.find((u) => u.id === t.leaderUserId);
+    const teamWorkers = state.workers.filter((w) => w.teamId === t.id);
+
+    const membersHtml = members.length === 0
+      ? `<p style="font-size:12px;color:var(--slate-400);margin:0">Гишүүн байхгүй</p>`
+      : members.map((u) => `
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--slate-100)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--blue-100);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-700);flex-shrink:0">
+              ${escapeHtml(u.fullName.charAt(0))}
+            </div>
+            <div style="min-width:0;flex:1">
+              <p style="margin:0;font-size:13px;font-weight:500;color:var(--ink-900)">${escapeHtml(u.fullName)}${u.id === t.leaderUserId ? ' <span style="font-size:10px;background:var(--blue-100);color:var(--blue-700);padding:1px 5px;border-radius:4px;font-weight:600">Ахлагч</span>' : ''}</p>
+              <p style="margin:0;font-size:11px;color:var(--slate-500)">${escapeHtml(u.username)}</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="font-size:11px;padding:2px 8px" data-edit-user="${u.id}">Засах</button>
+          </div>`).join("");
+
+    const workersHtml = teamWorkers.length === 0
+      ? `<p style="font-size:12px;color:var(--slate-400);margin:0">Ажилтан байхгүй</p>`
+      : teamWorkers.map((w) => `
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--slate-100)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--emerald-100,#d1fae5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#059669;flex-shrink:0">
+              ${escapeHtml(w.fullName.charAt(0))}
+            </div>
+            <div style="min-width:0;flex:1">
+              <p style="margin:0;font-size:13px;font-weight:500;color:var(--ink-900)">${escapeHtml(w.fullName)}</p>
+              <p style="margin:0;font-size:11px;color:var(--slate-500)">${escapeHtml([w.position, w.phone].filter(Boolean).join(" · ")) || "—"}</p>
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-secondary btn-sm" style="font-size:11px;padding:2px 8px" data-edit-worker="${w.id}">Засах</button>
+              <button class="btn btn-danger btn-sm" style="font-size:11px;padding:2px 8px" data-del-worker="${w.id}">Устгах</button>
+            </div>
+          </div>`).join("");
+
+    return `
     <div class="item-card">
       <div style="display:flex;align-items:start;justify-content:space-between;gap:8px">
         <div>
           <p style="font-weight:600;font-size:15px">${escapeHtml(t.name)}</p>
           <p style="font-size:12px;color:var(--slate-500)">${escapeHtml(getDeptName(t.departmentId, state.departments))}</p>
-          <p style="font-size:12px;color:var(--slate-500)">${escapeHtml(state.users.find((u) => u.id === t.leaderUserId)?.fullName ?? "Ахлагч тогтоогүй")}</p>
+          <p style="font-size:12px;color:var(--slate-500)">Ахлагч: ${escapeHtml(leader?.fullName ?? "Тогтоогүй")}</p>
         </div>
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm" data-edit-team="${t.id}">Засах</button>
           <button class="btn btn-danger btn-sm" data-del-team="${t.id}">Архивлах</button>
         </div>
       </div>
-    </div>
-  `).join("");
+      <div style="margin-top:10px;border-top:1px solid var(--slate-200);padding-top:8px">
+        <p style="font-size:11px;font-weight:600;color:var(--slate-400);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px">Системийн гишүүд (${members.length})</p>
+        ${membersHtml}
+      </div>
+      <div style="margin-top:10px;border-top:1px solid var(--slate-200);padding-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <p style="font-size:11px;font-weight:600;color:var(--slate-400);text-transform:uppercase;letter-spacing:.05em;margin:0">Ажилтнууд (${teamWorkers.length})</p>
+          <button class="btn btn-primary btn-sm" style="font-size:11px;padding:2px 8px" data-add-worker="${t.id}">+ Нэмэх</button>
+        </div>
+        ${workersHtml}
+      </div>
+    </div>`;
+  }).join("");
 
   list.querySelectorAll("[data-edit-team]").forEach((btn) => {
     const t = state.teams.find((x) => x.id === btn.dataset.editTeam);
@@ -159,6 +258,78 @@ function renderTeams() {
       await loadMeta(); renderActive();
     });
   });
+
+  list.querySelectorAll("[data-edit-user]").forEach((btn) => {
+    const u = state.users.find((x) => x.id === btn.dataset.editUser);
+    btn.addEventListener("click", () => openUserModal(u));
+  });
+
+  list.querySelectorAll("[data-add-worker]").forEach((btn) => {
+    btn.addEventListener("click", () => openAdminWorkerModal(null, btn.dataset.addWorker));
+  });
+
+  list.querySelectorAll("[data-edit-worker]").forEach((btn) => {
+    const w = state.workers.find((x) => x.id === btn.dataset.editWorker);
+    btn.addEventListener("click", () => openAdminWorkerModal(w, w?.teamId));
+  });
+
+  list.querySelectorAll("[data-del-worker]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const w = state.workers.find((x) => x.id === btn.dataset.delWorker);
+      if (!confirm(`"${w?.fullName}" ажилтныг устгах уу?`)) return;
+      try {
+        await api.deleteWorker(btn.dataset.delWorker);
+      } catch (err) { alert(err.message); return; }
+      await loadMeta(); renderActive();
+    });
+  });
+}
+
+function openAdminWorkerModal(worker, teamId) {
+  openModal(worker ? "Ажилтан засах" : "Ажилтан нэмэх", `
+    <form id="modal-form" class="field-grid">
+      <div class="field">
+        <label>Бүтэн нэр</label>
+        <input id="m-w-fullname" type="text" class="input" placeholder="Овог, нэр" value="${worker ? escapeHtml(worker.fullName) : ''}" required>
+      </div>
+      <div class="field-row-2">
+        <div class="field">
+          <label>Утас</label>
+          <input id="m-w-phone" type="tel" class="input" placeholder="XXXX-XXXX" value="${worker ? escapeHtml(worker.phone ?? '') : ''}">
+        </div>
+        <div class="field">
+          <label>Мэргэжил</label>
+          <input id="m-w-position" type="text" class="input" placeholder="Тоног төхөөрөмжийн засварчин" value="${worker ? escapeHtml(worker.position ?? '') : ''}">
+        </div>
+      </div>
+      <div class="field">
+        <label>Тэмдэглэл</label>
+        <textarea id="m-w-notes" class="textarea" rows="2" placeholder="Нэмэлт тэмдэглэл">${worker ? escapeHtml(worker.notes ?? '') : ''}</textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button type="submit" class="btn btn-primary" style="flex:1">Хадгалах</button>
+        <button type="button" class="btn btn-secondary" id="m-cancel">Цуцлах</button>
+      </div>
+    </form>
+  `);
+  el("m-cancel").onclick = closeModal;
+  el("modal-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const body = {
+      fullName: el("m-w-fullname").value.trim(),
+      phone:    el("m-w-phone").value.trim(),
+      position: el("m-w-position").value.trim(),
+      notes:    el("m-w-notes").value.trim(),
+      teamId:   teamId,
+    };
+    if (!body.fullName) { alert("Нэрийг оруулна уу"); return; }
+    try {
+      if (worker) await api.updateWorker(worker.id, body);
+      else await api.createWorker(body);
+      closeModal();
+      await loadMeta(); renderActive();
+    } catch (err) { alert(err.message); }
+  };
 }
 
 function openTeamModal(team) {
@@ -213,29 +384,110 @@ function openTeamModal(team) {
 }
 
 // ──────────── USERS ────────────
+const ROLE_ORDER = ["admin", "dispatcher", "general_engineer", "department_engineer", "brigade_leader"];
+
 function renderUsers() {
   el("user-add-btn").onclick = () => openUserModal(null);
 
   const list = el("user-list");
-  list.innerHTML = !state.users.length ? emptyState() : state.users.map((u) => `
-    <div class="item-card">
+  if (!state.users.length) { list.innerHTML = emptyState(); return; }
+
+  const userCard = (u) => `
+    <div class="item-card" style="margin-bottom:0;border-radius:0;background:#fff">
       <div style="display:flex;align-items:start;justify-content:space-between;gap:8px">
         <div>
           <p style="font-weight:600;font-size:15px">${escapeHtml(u.fullName)}</p>
-          <p style="font-size:12px;color:var(--slate-500)">${escapeHtml(u.username)} | ${escapeHtml(roleLabels[u.role] ?? u.role)}</p>
+          <p style="font-size:12px;color:var(--slate-500)">${escapeHtml(u.username)}</p>
           <p style="font-size:12px;color:var(--slate-500)">${escapeHtml(getDeptName(u.departmentId, state.departments))}</p>
         </div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-secondary btn-sm" data-edit-user="${u.id}">Засах</button>
+          <button class="btn btn-secondary btn-sm" data-reset-user="${u.id}">Нууц үг шинэчлэх</button>
           <button class="btn btn-danger btn-sm" data-del-user="${u.id}">Архивлах</button>
         </div>
       </div>
+    </div>`;
+
+  const grouped = ROLE_ORDER.map((role) => ({
+    role,
+    label: roleLabels[role] ?? role,
+    users: state.users.filter((u) => u.role === role),
+  })).filter((g) => g.users.length > 0);
+
+  const allGroups = ROLE_ORDER.map((role) => ({
+    role,
+    label: roleLabels[role] ?? role,
+    users: state.users.filter((u) => u.role === role),
+  }));
+
+  list.innerHTML = `
+    <div class="user-role-grid">
+      ${allGroups.map((g) => `
+        <div class="card" style="padding:0;overflow:hidden">
+          <button type="button" data-toggle-role="${g.role}" style="width:100%;padding:8px 12px;background:var(--slate-50);border:none;border-bottom:1px solid var(--slate-200);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px">
+            <div>
+              <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--slate-500);margin:0">${escapeHtml(g.label)}</p>
+              <p style="font-size:11px;color:var(--slate-400);margin:0">${g.users.length} хэрэглэгч</p>
+            </div>
+            <span data-arrow="${g.role}" style="font-size:10px;color:var(--slate-400);transition:transform .2s">▼</span>
+          </button>
+          <div data-role-body="${g.role}" style="display:flex;flex-direction:column">
+            ${g.users.length ? g.users.map((u) => `
+              <div class="item-card" style="margin-bottom:0;border-radius:0;background:#fff;border-bottom:1px solid var(--slate-100)">
+                <p style="font-weight:600;font-size:14px;margin:0 0 2px">${escapeHtml(u.fullName)}</p>
+                <p style="font-size:11px;color:var(--slate-500);margin:0 0 6px">${escapeHtml(u.username)}</p>
+                <p style="font-size:11px;color:var(--slate-400);margin:0 0 8px">${escapeHtml(getDeptName(u.departmentId, state.departments)) || "—"}</p>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <button class="btn btn-secondary btn-sm" style="width:100%" data-edit-user="${u.id}">Засах</button>
+                  <button class="btn btn-secondary btn-sm" style="width:100%" data-reset-user="${u.id}">Нууц үг шинэчлэх</button>
+                  <button class="btn btn-danger btn-sm" style="width:100%" data-del-user="${u.id}">Архивлах</button>
+                </div>
+              </div>`).join("") : `<p style="font-size:12px;color:var(--slate-400);padding:12px;text-align:center;margin:0">Хоосон</p>`}
+          </div>
+        </div>
+      `).join("")}
     </div>
-  `).join("");
+  `;
+
+  list.querySelectorAll("[data-toggle-role]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const role = btn.dataset.toggleRole;
+      const body  = list.querySelector(`[data-role-body="${role}"]`);
+      const arrow = list.querySelector(`[data-arrow="${role}"]`);
+      const isOpen = body.style.display !== "none";
+      body.style.display  = isOpen ? "none" : "flex";
+      arrow.style.transform = isOpen ? "rotate(-90deg)" : "rotate(0deg)";
+    });
+  });
 
   list.querySelectorAll("[data-edit-user]").forEach((btn) => {
     const u = state.users.find((x) => x.id === btn.dataset.editUser);
     btn.addEventListener("click", () => openUserModal(u));
+  });
+
+  list.querySelectorAll("[data-reset-user]").forEach((btn) => {
+    const u = state.users.find((x) => x.id === btn.dataset.resetUser);
+    btn.addEventListener("click", async () => {
+      if (!confirm(`"${u?.fullName}" хэрэглэгчийн нууц үгийг шинэчлэх үү?`)) return;
+      try {
+        const res = await api.resetUserPassword(btn.dataset.resetUser);
+        openModal("Түр нууц үг", `
+          <div style="text-align:center;padding:8px 0 16px">
+            <p style="color:var(--slate-600);margin-bottom:12px">
+              <strong>${escapeHtml(u?.fullName ?? "")}</strong> хэрэглэгчид дараах түр нууц үгийг утсаар эсвэл биечлэн мэдэгдэнэ үү.
+            </p>
+            <div style="font-size:2rem;font-weight:800;letter-spacing:0.15em;color:var(--ink-900);background:var(--slate-100);padding:16px 24px;border-radius:10px;display:inline-block">
+              ${escapeHtml(res.tempPassword)}
+            </div>
+            <p style="font-size:12px;color:var(--slate-400);margin-top:12px">
+              Хэрэглэгч нэвтэрсний дараа нууц үгээ заавал өөрчлөх болно.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-full" id="m-cancel">Ойлголоо</button>
+        `);
+        el("m-cancel").onclick = closeModal;
+      } catch (err) { alert(err.message); }
+    });
   });
 
   list.querySelectorAll("[data-del-user]").forEach((btn) => {
@@ -260,40 +512,37 @@ function openUserModal(user) {
 
   openModal(user ? "Хэрэглэгч засах" : "Хэрэглэгч нэмэх", `
     <form id="modal-form" class="field-grid">
+      ${user ? `
       <div class="field">
         <label>Бүтэн нэр</label>
-        <input id="m-user-fullname" type="text" class="input" placeholder="Овог Нэр" value="${user ? escapeHtml(user.fullName) : ''}" required>
+        <input id="m-user-fullname" type="text" class="input" placeholder="Овог, нэр" value="${escapeHtml(user.fullName)}" required>
       </div>
       <div class="field-row-2">
         <div class="field">
           <label>Нэвтрэх нэр</label>
-          <input id="m-user-username" type="text" class="input" placeholder="username" value="${user ? escapeHtml(user.username) : ''}" required autocomplete="off">
+          <input id="m-user-username" type="text" class="input" placeholder="username" value="${escapeHtml(user.username)}" required autocomplete="off">
         </div>
         <div class="field">
           <label>Утас</label>
-          <input id="m-user-phone" type="tel" class="input" placeholder="XXXX-XXXX" value="${user ? escapeHtml(user.phone ?? '') : ''}">
+          <input id="m-user-phone" type="tel" class="input" placeholder="XXXX-XXXX" value="${escapeHtml(user.phone ?? '')}" pattern="[0-9\\-]+" inputmode="numeric">
         </div>
       </div>
       <div class="field">
         <label>И-мэйл</label>
-        <input id="m-user-email" type="email" class="input" placeholder="name@example.com" value="${user ? escapeHtml(user.email ?? '') : ''}">
+        <input id="m-user-email" type="email" class="input" placeholder="name@example.com" value="${escapeHtml(user.email ?? '')}" inputmode="email">
       </div>
+      ` : `
       <div class="field">
-        <label>Нууц үг</label>
-        <div style="position:relative">
-          <input id="m-user-password" type="password" class="input" placeholder="${user ? 'Хоосон орхивол өөрчлөгдөхгүй' : 'Нууц үг оруулах'}" autocomplete="new-password" style="padding-right:40px">
-          <button type="button" id="m-toggle-password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);padding:0;line-height:1">
-            <svg id="m-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
+        <label>Нэвтрэх нэр <span style="color:var(--rose-500)">*</span></label>
+        <input id="m-user-username" type="text" class="input" placeholder="username" required autocomplete="off">
       </div>
+      <p style="font-size:12px;color:var(--slate-400);margin-top:-4px">Түр нууц үг автоматаар үүсгэгдэнэ. Хэрэглэгч анх нэвтрэхэд өөрчлөх болно.</p>
+      `}
       <div class="field">
         <label>Эрх</label>
         <select id="m-user-role" class="select">${roleOpts}</select>
       </div>
-      <div class="field">
+      <div class="field" id="m-user-dept-field">
         <label>Алба</label>
         <select id="m-user-dept" class="select">
           <option value="">Сонгох</option>
@@ -315,9 +564,14 @@ function openUserModal(user) {
 
   el("m-cancel").onclick = closeModal;
 
+  el("m-user-phone")?.addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/[^0-9\-]/g, "");
+  });
+
   el("m-toggle-password")?.addEventListener("click", () => {
     const pwd = el("m-user-password");
     const icon = el("m-eye-icon");
+    if (!pwd) return;
     if (pwd.type === "password") {
       pwd.type = "text";
       icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
@@ -331,7 +585,20 @@ function openUserModal(user) {
   const teamSel  = el("m-user-team");
   const teamField = el("m-user-team-field");
 
+  // Roles that need department selection
+  const DEPT_ROLES = ["brigade_leader", "worker", "department_engineer"];
+  // Roles that also need brigade selection
+  const TEAM_ROLES = ["brigade_leader", "worker"];
+  const zahirgaa = state.departments.find((d) => d.name === "Захиргаа");
+  const deptField = el("m-user-dept-field");
+
   const refreshTeams = () => {
+    const role = el("m-user-role").value;
+    if (!TEAM_ROLES.includes(role)) {
+      teamField.style.display = "none";
+      teamSel.value = "";
+      return;
+    }
     const filteredTeams = state.teams.filter((t) => !deptSel.value || t.departmentId === deptSel.value);
     if (filteredTeams.length === 0) {
       teamField.style.display = "none";
@@ -343,28 +610,58 @@ function openUserModal(user) {
     }
   };
 
+  const refreshDeptVisibility = () => {
+    const role = el("m-user-role").value;
+    if (DEPT_ROLES.includes(role)) {
+      deptField.style.display = "";
+    } else {
+      deptField.style.display = "none";
+      if (zahirgaa) deptSel.value = zahirgaa.id;
+      teamField.style.display = "none";
+      teamSel.value = "";
+    }
+    refreshTeams();
+  };
+
+  el("m-user-role").addEventListener("change", refreshDeptVisibility);
   deptSel.addEventListener("change", refreshTeams);
-  refreshTeams();
+  refreshDeptVisibility();
 
   el("modal-form").onsubmit = async (e) => {
     e.preventDefault();
-    const body = {
+    const username = el("m-user-username").value.trim();
+    const password = el("m-user-password")?.value.trim() ?? "";
+    const body = user ? {
       fullName:     el("m-user-fullname").value.trim(),
-      username:     el("m-user-username").value.trim(),
-      password:     el("m-user-password").value.trim(),
+      username,
+      ...(password ? { password } : {}),
       role:         el("m-user-role").value,
       departmentId: deptSel.value || undefined,
       teamId:       teamField.style.display !== "none" ? teamSel.value || undefined : undefined,
       phone:        el("m-user-phone").value.trim(),
       email:        el("m-user-email").value.trim() || undefined,
+    } : {
+      fullName:     username,
+      username,
+      password:     generateTempPassword(),
+      role:         el("m-user-role").value,
+      departmentId: deptSel.value || undefined,
+      teamId:       teamField.style.display !== "none" ? teamSel.value || undefined : undefined,
     };
-    if (!body.fullName || !body.username) { alert("Нэр болон нэвтрэх нэрийг оруулна уу"); return; }
-    if (!user && !body.password) { alert("Нууц үгийг оруулна уу"); return; }
+    if (!username) { alert("Нэвтрэх нэрийг оруулна уу"); return; }
+    if (user && !el("m-user-fullname").value.trim()) { alert("Бүтэн нэрийг оруулна уу"); return; }
     try {
-      if (user) await api.updateUser(user.id, body);
-      else await api.upsertUser(body);
-      closeModal();
-      await loadMeta(); renderActive();
+      if (user) {
+        await api.updateUser(user.id, body);
+        closeModal();
+        await loadMeta(); renderActive();
+      } else {
+        const tempPwd = body.password;
+        await api.upsertUser(body);
+        closeModal();
+        await loadMeta(); renderActive();
+        showTempPasswordModal(username, tempPwd);
+      }
     } catch (err) { alert(err.message); }
   };
 }
@@ -389,17 +686,48 @@ function renderStations() {
   );
 
   const list = el("station-list");
-  list.innerHTML = !filtered.length ? emptyState("Ус түгээх байр олдсонгүй") : filtered.map((s) => `
-    <div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden">
-      <p style="font-weight:700;font-size:15px;margin:0;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(s.code)}</p>
-      <p style="font-size:12px;color:var(--slate-500);margin:0;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${escapeHtml(s.location || "Байршил оруулаагүй")}</p>
-      <p style="font-size:12px;color:var(--slate-600);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(s.caretakerName || "Хянагч оруулаагүй")}${s.caretakerPhone ? ` | ${escapeHtml(s.caretakerPhone)}` : ""}</p>
+  if (!filtered.length) { list.innerHTML = emptyState("Ус түгээх байр олдсонгүй"); return; }
+
+  const stationCard = (s) => `
+    <div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0">
+      <p style="font-weight:700;font-size:15px;margin:0;color:var(--ink-900)">${escapeHtml(s.code)}</p>
+      <p style="font-size:12px;color:var(--slate-500);margin:0">${escapeHtml(s.location || "Байршил тодорхойгүй")}</p>
+      <p style="font-size:12px;color:var(--slate-600);margin:0">${escapeHtml(s.caretakerName || "Хянагч оруулаагүй")}${s.caretakerPhone ? ` | ${escapeHtml(s.caretakerPhone)}` : ""}</p>
       <div style="display:flex;gap:6px;margin-top:6px">
         <button class="btn btn-secondary btn-sm" style="flex:1" data-edit-station="${s.id}">Засах</button>
         <button class="btn btn-danger btn-sm" style="flex:1" data-del-station="${s.id}">Архивлах</button>
       </div>
-    </div>
-  `).join("");
+    </div>`;
+
+  const bags = [...new Set(filtered.map((s) => s.bagNo))].sort((a, b) => a - b);
+
+  list.innerHTML = bags.map((bag) => {
+    const bagStations = filtered.filter((s) => s.bagNo === bag);
+    return `
+      <div class="card" style="padding:0;overflow:hidden">
+        <button type="button" data-toggle-bag="${bag}" style="width:100%;padding:10px 14px;background:var(--slate-50);border:none;border-bottom:1px solid var(--slate-200);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:13px;font-weight:700;color:var(--ink-900)">${bag}-р баг</span>
+            <span style="font-size:11px;color:var(--slate-400);background:var(--slate-200);padding:1px 7px;border-radius:10px">${bagStations.length} ус түгээх байр</span>
+          </div>
+          <span data-bag-arrow="${bag}" style="font-size:10px;color:var(--slate-400);transition:transform .2s">▼</span>
+        </button>
+        <div data-bag-body="${bag}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:12px">
+          ${bagStations.map((s) => stationCard(s)).join("")}
+        </div>
+      </div>`;
+  }).join("");
+
+  list.querySelectorAll("[data-toggle-bag]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const bag   = btn.dataset.toggleBag;
+      const body  = list.querySelector(`[data-bag-body="${bag}"]`);
+      const arrow = list.querySelector(`[data-bag-arrow="${bag}"]`);
+      const isOpen = body.style.display !== "none";
+      body.style.display    = isOpen ? "none" : "grid";
+      arrow.style.transform = isOpen ? "rotate(-90deg)" : "rotate(0deg)";
+    });
+  });
 
   list.querySelectorAll("[data-edit-station]").forEach((btn) => {
     const s = state.stations.find((x) => x.id === btn.dataset.editStation);
@@ -551,13 +879,14 @@ async function renderArchive() {
 }
 
 // ──────────── AUDIT LOG ────────────
-const ACTION_LABELS = { create: "Үүсгэсэн", update: "Засварласан", archive: "Архивласан", restore: "Сэргээсэн" };
-const ENTITY_LABELS = { department: "Алба", team: "Бригад", user: "Хэрэглэгч", station: "Ус түгээх байр" };
+const ACTION_LABELS = { create: "Үүсгэсэн", update: "Засварласан", archive: "Архивласан", restore: "Сэргээсэн", delete: "Устгасан" };
+const ENTITY_LABELS = { department: "Алба", team: "Бригад", user: "Хэрэглэгч", station: "Ус түгээх байр", worker: "Ажилтан" };
 const ACTION_COLORS = {
   create:  "var(--emerald-600)",
   update:  "var(--brand-600)",
   archive: "var(--rose-600)",
   restore: "var(--amber-700)",
+  delete:  "var(--rose-600)",
 };
 
 let _auditLogs = [];
@@ -584,7 +913,7 @@ function _renderAuditList() {
   });
 
   if (!logs.length) {
-    list.innerHTML = `<div class="empty-state" style="padding:40px">Лог олдсонгүй</div>`;
+    list.innerHTML = `<div class="empty-state" style="padding:40px">Үйлдлийн бүртгэл олдсонгүй.</div>`;
     return;
   }
 
@@ -635,7 +964,7 @@ async function renderAuditLog() {
     list.innerHTML = `<p style="color:var(--slate-500);font-size:14px">Ачааллаж байна…</p>`;
     let data;
     try { data = await api.getAuditLogs(); } catch {
-      list.innerHTML = `<p class="empty-state">Лог ачаалахад алдаа гарлаа</p>`;
+      list.innerHTML = `<p class="empty-state">Үйлдлийн бүртгэл ачаалж чадсангүй.</p>`;
       return;
     }
     _auditLogs = data.logs ?? [];
@@ -653,7 +982,7 @@ async function renderAuditLog() {
   }
 
   if (!_auditLogs.length) {
-    list.innerHTML = `<div class="empty-state" style="padding:40px">Үйлдлийн лог хоосон байна</div>`;
+    list.innerHTML = `<div class="empty-state" style="padding:40px">Үйлдлийн бүртгэл алга.</div>`;
     return;
   }
 

@@ -82,7 +82,7 @@ document.getElementById("forgot-form").addEventListener("submit", async (e) => {
       body: JSON.stringify({ email }),
     });
     const data = await res.json();
-    forgotMsg.textContent = data.ok ? "Нууц үг шинэчлэх линк илгээгдлээ." : (data.message || "Алдаа гарлаа");
+    forgotMsg.textContent = data.ok ? "Нууц үг шинэчлэх холбоос илгээгдлээ." : (data.message || "Алдаа гарлаа.");
     forgotMsg.style.cssText = `display:block;color:${data.ok ? "var(--emerald-700)" : "var(--rose-600)"};background:${data.ok ? "var(--emerald-50)" : "var(--rose-50)"};padding:8px 12px;border-radius:6px;font-size:13px`;
   } catch {
     forgotMsg.textContent = "Серверийн алдаа.";

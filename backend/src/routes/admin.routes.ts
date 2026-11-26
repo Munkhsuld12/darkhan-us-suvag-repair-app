@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import { Router } from "express";
 import { query } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth.middleware";
@@ -279,7 +279,26 @@ router.post("/users", async (req, res) => {
     if (!fullName?.trim() || !username?.trim() || !password?.trim()) {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" }); return;
     }
+
+    // If username belongs to an archived user, restore + update instead of insert
+    const archived = await query<{ id: string }>(
+      "SELECT id FROM users WHERE username=$1 AND deleted_at IS NOT NULL LIMIT 1",
+      [username.trim()]
+    );
     const hash = await bcrypt.hash(password, 10);
+
+    if (archived.rows.length > 0) {
+      const existingId = archived.rows[0].id;
+      await query(
+        `UPDATE users SET full_name=$1, password_hash=$2, role=$3, department_id=$4,
+         team_id=$5, phone=$6, profile_complete=false, deleted_at=NULL WHERE id=$7`,
+        [fullName.trim(), hash, role, departmentId || null, teamId || null, phone || "", existingId]
+      );
+      await audit(req.user!.id, "restore", "user", existingId, `${fullName.trim()} (${username.trim()})`);
+      res.json({ ok: true, id: existingId });
+      return;
+    }
+
     const newId = id?.trim() || randomUUID();
     const isUpdate = !!id?.trim();
     await query(
@@ -385,6 +404,33 @@ router.post("/users/:id/restore", async (req, res) => {
     const u = nameRes.rows[0];
     await audit(req.user!.id, "restore", "user", req.params.id, u ? `${u.full_name} (${u.username})` : "");
     res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Серверийн алдаа" });
+  }
+});
+
+router.post("/users/:id/reset-password", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userRes = await query<{ full_name: string; username: string }>(
+      "SELECT full_name, username FROM users WHERE id=$1 AND deleted_at IS NULL", [id]
+    );
+    const user = userRes.rows[0];
+    if (!user) { res.status(404).json({ ok: false, message: "Хэрэглэгч олдсонгүй" }); return; }
+
+    // Generate readable temp password: 3 letters + 4 digits
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const digits  = "23456789";
+    const tempPassword =
+      Array.from({ length: 3 }, () => letters[randomBytes(1)[0] % letters.length]).join("") +
+      Array.from({ length: 4 }, () => digits[randomBytes(1)[0]  % digits.length]).join("");
+
+    const hash = await bcrypt.hash(tempPassword, 10);
+    await query("UPDATE users SET password_hash=$1, profile_complete=false WHERE id=$2", [hash, id]);
+    await audit(req.user!.id, "reset_password", "user", id, `${user.full_name} (${user.username})`);
+
+    res.json({ ok: true, tempPassword });
   } catch (err) {
     console.error(err);
     res.status(500).json({ ok: false, message: "Серверийн алдаа" });

@@ -21,7 +21,7 @@ const html = `
         <div class="field">
           <label for="lm-password">Нууц үг</label>
           <div style="position:relative">
-            <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна" required autocomplete="current-password" style="padding-right:40px">
+            <input id="lm-password" type="password" class="input" placeholder="Нууц үгээ оруулна уу" required autocomplete="current-password" style="padding-right:40px">
             <button type="button" id="lm-toggle-password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);padding:0">
               <svg id="lm-eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -36,7 +36,7 @@ const html = `
         </p>
       </form>
       <form id="forgot-form" class="field-grid" style="display:none">
-        <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">И-мэйл хаягаа оруулна уу.</p>
+        <p style="font-size:13px;color:var(--slate-600);margin:0 0 4px">Нууц үг шинэчлэх холбоос авахын тулд и-мэйл хаягаа оруулна уу.</p>
         <div class="field">
           <label for="lm-email">И-мэйл хаяг</label>
           <input id="lm-email" type="email" class="input" placeholder="name@example.com" required autocomplete="email">
@@ -118,7 +118,7 @@ document.getElementById("forgot-form").addEventListener("submit", async (e) => {
       body: JSON.stringify({ email }),
     });
     const data = await res.json();
-    forgotMsg.textContent = data.ok ? "Нууц үг шинэчлэх линк илгээгдлээ." : (data.message || "Алдаа гарлаа");
+    forgotMsg.textContent = data.ok ? "Нууц үг шинэчлэх холбоос илгээгдлээ." : (data.message || "Алдаа гарлаа.");
     forgotMsg.style.cssText = `display:block;color:${data.ok ? "var(--emerald-700)" : "var(--rose-600)"};background:${data.ok ? "var(--emerald-50)" : "var(--rose-50)"};padding:8px 12px;border-radius:6px;font-size:13px`;
   } catch {
     forgotMsg.textContent = "Серверийн алдаа.";

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Профайл тохируулах — Дархан-Ус Суваг ХК</title>
+  <title>Миний мэдээлэл — Дархан-Ус Суваг ХК</title>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
@@ -25,15 +25,19 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
-        <p class="login-heading-sub">Анхны нэвтрэлт</p>
-        <h2 class="login-heading">Профайл тохируулах</h2>
-        <p style="font-size:14px;color:var(--slate-500);margin-top:8px">Системд бүртгэгдсэн тул өөрийн мэдээллээ оруулна уу. Дараагийн нэвтрэлтэд шинэ нууц үгээ ашиглана.</p>
+        <p class="login-heading-sub" id="sp-subtitle">Анхны нэвтрэлт</p>
+        <h2 class="login-heading" id="sp-title">Хувийн мэдээллээ тохируулах</h2>
+        <p id="sp-help" style="font-size:14px;color:var(--slate-500);margin-top:8px">Мэдээллээ оруулна уу. Дараа нэвтрэхдээ шинэ нууц үгээ ашиглана.</p>
       </div>
 
       <form id="setup-form" class="field-grid">
         <div class="field">
           <label for="sp-fullname">Бүтэн нэр <span style="color:var(--rose-500)">*</span></label>
-          <input id="sp-fullname" type="text" class="input" placeholder="Овог Нэр" required autocomplete="name">
+          <input id="sp-fullname" type="text" class="input" placeholder="Овог, нэр" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="sp-username">Нэвтрэх нэр <span style="color:var(--rose-500)">*</span></label>
+          <input id="sp-username" type="text" class="input" placeholder="username" required autocomplete="username">
         </div>
         <div class="field">
           <label for="sp-phone">Утасны дугаар <span style="color:var(--rose-500)">*</span></label>
@@ -44,15 +48,23 @@
           <input id="sp-email" type="email" class="input" placeholder="example@gmail.com" autocomplete="email">
         </div>
         <div class="field">
-          <label for="sp-password">Шинэ нууц үг <span style="color:var(--rose-500)">*</span></label>
-          <input id="sp-password" type="password" class="input" placeholder="Хамгийн багадаа 6 тэмдэгт" required minlength="6" autocomplete="new-password">
+          <label for="sp-current-password">Одоогийн нууц үг</label>
+          <input id="sp-current-password" type="password" class="input" placeholder="Нууц үг солих бол бөглөнө үү" autocomplete="current-password">
         </div>
         <div class="field">
-          <label for="sp-confirm">Нууц үг давтах <span style="color:var(--rose-500)">*</span></label>
-          <input id="sp-confirm" type="password" class="input" placeholder="Нууц үгээ давтан оруулна уу" required autocomplete="new-password">
+          <label for="sp-password">Шинэ нууц үг <span id="sp-password-required" style="color:var(--rose-500)">*</span></label>
+          <input id="sp-password" type="password" class="input" placeholder="8-аас доошгүй тэмдэгт" required minlength="8" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="sp-confirm">Шинэ нууц үг (давтан) <span id="sp-confirm-required" style="color:var(--rose-500)">*</span></label>
+          <input id="sp-confirm" type="password" class="input" placeholder="Шинэ нууц үгээ дахин оруулна уу" required autocomplete="new-password">
         </div>
         <p id="sp-error" class="error-msg" style="display:none"></p>
-        <button id="sp-submit" type="submit" class="btn btn-primary btn-full btn-lg">Хадгалаад нэвтрэх</button>
+        <div id="sp-success" class="success-msg" style="display:none">Мэдээлэл хадгалагдлаа.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button id="sp-back" type="button" class="btn btn-secondary btn-lg" style="flex:1;min-width:140px;display:none">Буцах</button>
+          <button id="sp-submit" type="submit" class="btn btn-primary btn-lg" style="flex:2;min-width:180px">Хадгалаад нэвтрэх</button>
+        </div>
       </form>
     </div>
   </div>

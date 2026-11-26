@@ -11,6 +11,16 @@ export function setupSidebar() {
   if (nameEl) nameEl.textContent = user.fullName;
   if (roleEl) roleEl.textContent = user.username;
 
+  const nav = document.querySelector(".sidebar-nav");
+  if (nav && !nav.querySelector("[data-profile-link]")) {
+    const link = document.createElement("a");
+    link.href = "/profile-setup.html?mode=edit";
+    link.className = `nav-item${location.pathname === "/profile-setup.html" ? " active" : ""}`;
+    link.dataset.profileLink = "1";
+    link.textContent = "Миний мэдээлэл";
+    nav.appendChild(link);
+  }
+
   document.getElementById("logout-btn")?.addEventListener("click", () => logout());
 
   const toggle  = document.getElementById("menu-toggle");

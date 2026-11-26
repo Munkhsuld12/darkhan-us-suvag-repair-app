@@ -24,15 +24,15 @@ const toTask = (row: Record<string, unknown>) => ({
 
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const user = req.user!;
+    const user = req.user;
     let sql = "SELECT * FROM tasks";
     const params: unknown[] = [];
 
-    if (user.role === "brigade_leader" && user.teamId) {
+    if (user?.role === "brigade_leader" && user.teamId) {
       sql += " WHERE team_id = $1";
       params.push(user.teamId);
-    } else if (user.role === "department_engineer" && user.departmentId) {
-      sql += " WHERE department_id = $1";
+    } else if (user?.role === "department_engineer" && user.departmentId) {
+      sql += " WHERE (department_id = $1 OR team_id IN (SELECT id FROM teams WHERE department_id = $1 AND deleted_at IS NULL))";
       params.push(user.departmentId);
     }
 
@@ -47,13 +47,40 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.post("/", requireAuth, requireRole("admin", "general_engineer", "department_engineer"), async (req, res) => {
   try {
-    const { stationId, teamId, departmentId, createdBy, description, taskDate } = req.body as {
+    const { stationId, teamId, departmentId, description, taskDate } = req.body as {
       stationId: string; teamId: string; departmentId: string;
-      createdBy: string; description: string; taskDate: string;
+      description: string; taskDate: string;
     };
+    const createdBy = req.user!.id;
 
     if (!stationId || !teamId || !departmentId || !description || !taskDate) {
       res.status(400).json({ ok: false, message: "Шаардлагатай талбарыг бөглөнө үү" });
+      return;
+    }
+
+    const user = req.user!;
+    if (user.role === "department_engineer") {
+      if (!user.departmentId) {
+        res.status(403).json({ ok: false, message: "Танд алба оноогоогүй байна" });
+        return;
+      }
+      if (departmentId !== user.departmentId) {
+        res.status(403).json({ ok: false, message: "Та зөвхөн өөрийн албанд ажил хуваарилна" });
+        return;
+      }
+    }
+
+    const teamRes = await query<{ department_id: string }>(
+      "SELECT department_id FROM teams WHERE id = $1 AND deleted_at IS NULL",
+      [teamId]
+    );
+    const team = teamRes.rows[0];
+    if (!team) {
+      res.status(404).json({ ok: false, message: "Бригад олдсонгүй" });
+      return;
+    }
+    if (team.department_id !== departmentId) {
+      res.status(400).json({ ok: false, message: "Сонгосон бригад энэ албанд харьяалагдахгүй байна" });
       return;
     }
 

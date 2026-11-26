@@ -42,7 +42,7 @@
           <button class="tab-btn" data-tab="users">Хэрэглэгчид</button>
           <button class="tab-btn" data-tab="stations">Ус түгээх байр</button>
           <button class="tab-btn" data-tab="archive">Архив</button>
-          <button class="tab-btn" data-tab="auditlog">Үйлдлийн лог</button>
+          <button class="tab-btn" data-tab="auditlog">Үйлдлийн бүртгэл</button>
         </div>
 
         <!-- Departments panel -->
@@ -101,12 +101,12 @@
         <div class="tab-panel hidden" data-panel="auditlog">
           <div class="card section-stack">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-              <h2 style="font-size:17px;font-weight:700">Үйлдлийн лог <span style="font-size:12px;font-weight:400;color:var(--slate-500)">(сүүлийн 500)</span></h2>
+              <h2 style="font-size:17px;font-weight:700">Үйлдлийн бүртгэл <span style="font-size:12px;font-weight:400;color:var(--slate-500)">(сүүлийн 500)</span></h2>
               <button id="audit-filter-reset" class="btn btn-ghost btn-sm">Цэвэрлэх</button>
             </div>
             <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end">
               <div class="field" style="margin:0">
-                <input id="audit-search" type="text" class="input" placeholder="Нэр, объект, хэрэглэгчээр хайх…">
+                <input id="audit-search" type="text" class="input" placeholder="Нэр, бүртгэлийн төрөл, хэрэглэгчээр хайх…">
               </div>
               <select id="audit-filter-action" class="select" style="min-width:130px">
                 <option value="all">Бүх үйлдэл</option>
@@ -116,7 +116,7 @@
                 <option value="restore">Сэргээсэн</option>
               </select>
               <select id="audit-filter-entity" class="select" style="min-width:130px">
-                <option value="all">Бүх объект</option>
+                <option value="all">Бүх төрөл</option>
                 <option value="department">Алба</option>
                 <option value="team">Бригад</option>
                 <option value="user">Хэрэглэгч</option>

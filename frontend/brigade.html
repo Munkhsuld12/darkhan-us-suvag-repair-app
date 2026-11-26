@@ -36,26 +36,53 @@
       </div>
 
       <div class="app-page">
-        <!-- Summary card (3-column) -->
-        <div class="card" style="padding:16px">
-          <div class="brigade-stats">
-            <div class="brig-stat">
-              <p class="stat-label">Нийт</p>
-              <p class="stat-value" id="brig-total">0</p>
-            </div>
-            <div class="brig-stat tone-sky">
-              <p class="stat-label">Явц</p>
-              <p class="stat-value" id="brig-progress">0</p>
-            </div>
-            <div class="brig-stat tone-amber">
-              <p class="stat-label">Үлдсэн</p>
-              <p class="stat-value" id="brig-pending">0</p>
-            </div>
+        <!-- Work list: 2 columns -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+          <div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#f97316;margin-bottom:8px;padding-left:4px">
+              Засварын хүсэлт <span id="brigade-ticket-count" style="font-weight:400;color:var(--slate-400)"></span>
+            </p>
+            <div id="brigade-tickets" class="compact-grid" style="grid-template-columns:1fr"></div>
+          </div>
+          <div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#0ea5e9;margin-bottom:8px;padding-left:4px">
+              Өдөр тутмын ажил <span id="brigade-task-count" style="font-weight:400;color:var(--slate-400)"></span>
+            </p>
+            <div id="brigade-tasks" class="compact-grid" style="grid-template-columns:1fr"></div>
           </div>
         </div>
 
-        <!-- Work list -->
-        <div id="brigade-list" class="compact-grid"></div>
+        <!-- Completed work section -->
+        <div class="card" style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h2 style="font-size:15px;font-weight:700;margin:0">Дууссан ажлууд</h2>
+            <span id="done-count" class="badge badge-normal"></span>
+          </div>
+          <div id="done-list"></div>
+        </div>
+
+        <!-- Stats / report section -->
+        <div class="card" style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <h2 style="font-size:15px;font-weight:700;margin:0">Бригадын тайлан</h2>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <input id="stat-from" type="date" class="input" style="width:140px">
+              <span style="color:var(--slate-400);font-size:13px">—</span>
+              <input id="stat-to"   type="date" class="input" style="width:140px">
+            </div>
+          </div>
+          <div id="stat-summary" class="compact-grid compact-grid-4" style="gap:12px;margin-bottom:16px"></div>
+          <div id="stat-workers"></div>
+        </div>
+
+        <!-- Workers section -->
+        <div class="card" style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h2 style="font-size:15px;font-weight:700;margin:0">Бригадын ажилтнууд</h2>
+            <button class="btn btn-primary btn-sm" id="add-worker-btn">+ Нэмэх</button>
+          </div>
+          <div id="workers-section"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -74,8 +101,11 @@
             <textarea id="finish-report" class="textarea" rows="4" placeholder="Хийсэн ажлын тайлан…" required></textarea>
           </div>
           <div class="field">
-            <label for="finish-materials">Ашигласан материал</label>
-            <input id="finish-materials" type="text" class="input" placeholder="Материалын жагсаалт (заавал биш)">
+            <label>Ашигласан материал</label>
+            <div id="material-checkboxes" class="compact-grid" style="gap:8px;margin-top:4px"></div>
+            <div id="material-other-wrap" style="display:none;margin-top:8px">
+              <input id="finish-materials-other" type="text" class="input" placeholder="Бусад материал бичнэ үү…">
+            </div>
           </div>
           <div class="field">
             <p style="font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:8px">Оролцсон ажилтнууд</p>
@@ -86,6 +116,55 @@
             <button type="submit" class="btn btn-primary">Хадгалах</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Worker modal -->
+  <div id="worker-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="worker-modal-title">Ажилтан нэмэх</h2>
+        <button class="modal-close" id="worker-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="worker-form" class="field-grid">
+          <div class="field">
+            <label for="w-fullname">Бүтэн нэр</label>
+            <input id="w-fullname" type="text" class="input" placeholder="Овог, нэр" required>
+          </div>
+          <div class="field-row-2">
+            <div class="field">
+              <label for="w-phone">Утас</label>
+              <input id="w-phone" type="tel" class="input" placeholder="XXXX-XXXX">
+            </div>
+            <div class="field">
+              <label for="w-position">Мэргэжил</label>
+              <input id="w-position" type="text" class="input" placeholder="Жишээ: Тоног төхөөрөмжийн засварчин">
+            </div>
+          </div>
+          <div class="field">
+            <label for="w-notes">Тэмдэглэл</label>
+            <textarea id="w-notes" class="textarea" rows="2" placeholder="Нэмэлт тэмдэглэл"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" id="worker-modal-cancel">Болих</button>
+            <button type="submit" class="btn btn-primary">Хадгалах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done work detail modal -->
+  <div id="done-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="done-modal-title">Дууссан ажлын дэлгэрэнгүй</h2>
+        <button class="modal-close" id="done-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="done-modal-body" class="field-grid"></div>
       </div>
     </div>
   </div>

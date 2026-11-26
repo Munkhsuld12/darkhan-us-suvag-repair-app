@@ -19,7 +19,7 @@
           <p class="user-username" id="sidebar-role">…</p>
         </div>
         <nav class="sidebar-nav">
-          <a href="/engineer.html" class="nav-item active">Инженер</a>
+          <a href="/engineer.html" class="nav-item active">Төлөвлөгөөт ажил</a>
           <a href="/stations-internal.html" class="nav-item">Ус түгээх байрууд</a>
           <a href="/reports.html" class="nav-item">Тайлан</a>
         </nav>
@@ -32,88 +32,92 @@
     <div class="main-content">
       <div class="topbar">
         <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
-        <span class="topbar-title">Инженер</span>
+        <span class="topbar-title">Төлөвлөгөөт ажил</span>
       </div>
 
       <div class="app-page">
-        <!-- Stat block (no outer padding, inline grid) -->
-        <div class="stat-block">
-          <div class="stat-block-inner">
-            <div class="stat-cell stat-brand">
-              <p class="stat-label">Нийт</p>
-              <p class="stat-value" id="eng-total">0</p>
-            </div>
-            <div class="stat-cell stat-sky">
-              <p class="stat-label">Явц</p>
-              <p class="stat-value" id="eng-progress">0</p>
-            </div>
-            <div class="stat-cell stat-emerald">
-              <p class="stat-label">Дууссан</p>
-              <p class="stat-value" id="eng-done">0</p>
-            </div>
-            <div class="stat-cell stat-amber">
-              <p class="stat-label">Хоцролт</p>
-              <p class="stat-value" id="eng-delayed">0</p>
-            </div>
-          </div>
+
+
+
+        <!-- Workload -->
+        <div class="card section-stack">
+          <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin:0 0 10px">Бригадын ачаалал</p>
+          <div id="workload-grid" class="workload-grid"></div>
         </div>
 
-        <div class="panel-grid panel-grid-engineer">
-          <!-- Left: Task creation form -->
-          <div class="card section-stack">
-            <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Шинэ ажил</h2>
-            <form id="task-form" class="field-grid">
-              <div class="field-row-2">
-                <div class="field" id="dept-field-wrap">
-                  <label for="form-dept">Алба</label>
-                  <select id="form-dept" class="select" required>
-                    <option value="">Алба сонгох</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="form-team">Засварын бригад</label>
-                  <select id="form-team" class="select" required>
-                    <option value="">Засварын бригад сонгох</option>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
-                <label for="form-station">Ус түгээх байр</label>
-                <input id="form-station" type="text" class="input" list="engineer-station-datalist" placeholder="Код, нэр, байршил, хянагчаар хайх" autocomplete="off" required>
-                <datalist id="engineer-station-datalist"></datalist>
-                <input type="hidden" id="form-station-id">
-              </div>
-              <div class="field">
-                <label for="form-date">Огноо</label>
-                <input id="form-date" type="date" class="input" required>
-              </div>
-              <div class="field">
-                <label for="form-desc">Тайлбар</label>
-                <textarea id="form-desc" class="textarea" rows="3" placeholder="Хийх ажлын тайлбар…" required></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary">Ажил үүсгэх</button>
-            </form>
+        <!-- Tasks -->
+        <div class="card section-stack">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate-400);margin:0">
+              Төлөвлөгөөт ажлууд
+              <span id="tasks-count" style="display:none;margin-left:6px;background:var(--brand-600);color:#fff;font-size:11px;padding:1px 7px;border-radius:10px"></span>
+            </p>
+            <button class="btn btn-primary btn-sm" id="btn-new-task">+ Ажил нэмэх</button>
           </div>
-
-          <!-- Right: Tasks list -->
-          <div class="card section-stack" style="min-height:360px">
-            <div style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--slate-200);padding-bottom:12px">
-              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
-                <div>
-                  <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Өдөр тутмын ажил</h2>
-                  <p id="tasks-progress-label" style="font-size:13px;color:var(--slate-500);margin-top:2px"></p>
-                </div>
-                <div id="dept-filter-wrap" style="display:none">
-                  <select id="dept-filter" class="select" style="min-width:160px">
-                    <option value="all">Бүх алба</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div id="tasks-list" class="section-stack scroll-pane"></div>
-          </div>
+          <div id="tasks-list"></div>
         </div>
+
       </div>
+    </div>
+  </div>
+
+  <!-- Task create modal -->
+  <div id="task-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Төлөвлөгөөт ажил нэмэх</h2>
+        <button class="modal-close" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="task-form" class="field-grid">
+          <div class="field">
+            <label>Ус түгээх байр</label>
+            <input id="task-station" type="text" class="input" list="task-station-list" placeholder="Код эсвэл байршлаар хайх…" autocomplete="off" required>
+            <input id="task-station-id" type="hidden">
+            <datalist id="task-station-list"></datalist>
+          </div>
+          <div class="field-row-2">
+            <div class="field">
+              <label>Алба</label>
+              <select id="task-dept" class="select" required>
+                <option value="">Алба сонгох</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Бригад</label>
+              <select id="task-team" class="select" required>
+                <option value="">Бригад сонгох</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Огноо</label>
+            <input id="task-date" type="date" class="input" required>
+          </div>
+          <div class="field">
+            <label>Ажлын тайлбар</label>
+            <textarea id="task-desc" class="textarea" rows="3" placeholder="Хийх ажлын дэлгэрэнгүй тайлбар…" required></textarea>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-close-modal>Болих</button>
+            <button type="submit" class="btn btn-primary">Хуваарилах</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team detail modal -->
+  <div id="tdm-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="tdm-title" style="margin:0"></h2>
+          <p id="tdm-leader" style="font-size:13px;color:var(--slate-500);margin:2px 0 0"></p>
+        </div>
+        <button class="modal-close" id="tdm-close">✕</button>
+      </div>
+      <div class="modal-body" id="tdm-body" style="display:flex;flex-direction:column;gap:8px;max-height:70vh;overflow-y:auto"></div>
     </div>
   </div>
 

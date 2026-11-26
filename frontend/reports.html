@@ -6,9 +6,70 @@
   <title>Тайлан — Дархан-Ус Суваг ХК</title>
   <link rel="stylesheet" href="/assets/css/style.css">
   <style>
+    #print-header, #print-footer { display: none; }
+
     @media print {
-      .sidebar, #menu-toggle, .btn-csv, .btn-print-btn, .sidebar-overlay, [data-close-modal] { display: none !important; }
-      .main-content { margin-left: 0 !important; }
+      /* Hide UI chrome */
+      .sidebar, .sidebar-overlay, .topbar, #report-tabs,
+      .card:has(#filter-from),
+      .btn, button { display: none !important; }
+
+      /* Layout */
+      .app-shell, .main-content { display: block !important; margin: 0 !important; padding: 0 !important; }
+      .main-content { margin-left: 0 !important; height: auto !important; overflow: visible !important; }
+      .app-page { padding: 8px 0 0 !important; height: auto !important; overflow: visible !important; }
+      body { background: white !important; color: #111 !important; font-size: 11px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      /* Print header */
+      #print-header { display: flex !important; align-items: center; gap: 14px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #000; }
+      #print-header img { height: 48px; width: auto; flex-shrink: 0; }
+      #print-header .ph-text h1 { font-size: 15px; font-weight: 800; margin: 0 0 2px; }
+      #print-header .ph-text p  { font-size: 10px; margin: 0; color: #555; }
+
+      /* Print footer */
+      #print-footer { display: block !important; margin-top: 32px; padding-top: 16px; border-top: 1px solid #ccc; page-break-inside: avoid; }
+      #print-footer .pf-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+      #print-footer .pf-col { flex: 1; }
+      #print-footer .pf-label { font-size: 10px; color: #555; margin-bottom: 24px; }
+      #print-footer .pf-line { border-bottom: 1px solid #333; margin-bottom: 4px; height: 28px; }
+      #print-footer .pf-name { font-size: 10px; color: #555; }
+      #print-footer .pf-stamp { width: 90px; height: 90px; border: 1.5px dashed #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #aaa; text-align: center; flex-shrink: 0; }
+
+      /* Hide summary stat cards and count badge */
+      #summary-cards, #main-count { display: none !important; }
+
+      /* Cards */
+      .card { border: none !important; box-shadow: none !important; background: white !important; break-inside: avoid; margin-bottom: 12px !important; padding: 0 !important; }
+      .item-card { border: none !important; box-shadow: none !important; background: white !important; }
+
+      /* Summary cards */
+      .compact-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+      .summary-card { border: 1px solid #ccc !important; box-shadow: none !important; background: white !important; padding: 10px 12px !important; }
+      .summary-card .label { color: #555 !important; font-size: 10px !important; }
+      .summary-card .value { color: #111 !important; font-size: 22px !important; }
+      .summary-card .note  { color: #888 !important; font-size: 10px !important; }
+
+      /* Badges — plain text in print */
+      .badge { border: none !important; background: none !important; color: #111 !important; font-size: 10px !important; padding: 0 !important; border-radius: 0 !important; font-weight: 600; }
+
+      /* Hide breakdown cards in print */
+      #breakdown-cards { display: none !important; }
+
+      /* Table */
+      .scroll-pane { max-height: none !important; overflow: visible !important; }
+      table { width: 100% !important; border-collapse: collapse !important; font-size: 10.5px !important; table-layout: fixed !important; }
+      table th { background: #f0f0f0 !important; color: #111 !important; font-weight: 700 !important; padding: 6px 8px !important; border: 1px solid #ccc !important; text-align: left !important; font-size: 10px !important; }
+      table td { padding: 5px 8px !important; border: 1px solid #ddd !important; vertical-align: top !important; word-break: break-word !important; }
+      table tr:nth-child(even) td { background: #fafafa !important; }
+
+      /* Breakdowns */
+      .panel-grid { display: block !important; }
+      .panel-grid > * { margin-bottom: 12px; }
+      #breakdown-cards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+      .breakdown-card { border: 1px solid #ccc !important; box-shadow: none !important; background: white !important; break-inside: avoid; }
+      .breakdown-row { border-bottom: 1px solid #eee !important; }
+
+      @page { margin: 16mm 14mm; size: A4 portrait; }
     }
   </style>
 </head>
@@ -39,25 +100,44 @@
         <button id="menu-toggle" class="menu-toggle">☰ Цэс</button>
         <span class="topbar-title">Тайлан</span>
         <div style="margin-left:auto;display:flex;gap:8px">
-          <button id="btn-csv" class="btn btn-secondary btn-sm btn-csv">CSV татах</button>
+          <button id="btn-excel" class="btn btn-secondary btn-sm">Excel</button>
+          <button id="btn-pdf"   class="btn btn-secondary btn-sm">PDF</button>
+          <button id="btn-csv"   class="btn btn-secondary btn-sm btn-csv">CSV</button>
           <button id="btn-print" class="btn btn-primary btn-sm btn-print-btn">Хэвлэх</button>
         </div>
       </div>
 
       <div class="app-page">
+        <!-- Print-only header -->
+        <div id="print-header">
+          <img id="print-logo" src="/DUS-only-logo.png" alt="Дархан-Ус Суваг ХК лого" onload="this.dataset.loaded='1'">
+          <div class="ph-text">
+            <h1>Дархан-Ус Суваг ХК — <span id="print-report-type">Тайлан</span></h1>
+            <p id="print-date-range"></p>
+            <p id="print-meta"></p>
+          </div>
+        </div>
+
         <!-- Report type tabs -->
         <div id="report-tabs" class="card" style="padding:12px 14px">
           <div class="tab-list" id="report-tab-list"></div>
         </div>
 
         <!-- Summary cards -->
-        <div id="summary-cards" class="compact-grid compact-grid-4"></div>
+        <div id="summary-cards" class="compact-grid compact-grid-4" style="display:none"></div>
 
         <!-- Filters card -->
         <div class="card section-stack">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <h2 style="font-size:20px;font-weight:700;color:var(--ink-900)">Шүүлтүүр</h2>
             <button id="filter-reset" class="btn btn-ghost btn-sm">Цэвэрлэх</button>
+          </div>
+          <div id="date-presets" class="tab-list" style="gap:8px;flex-wrap:wrap">
+            <button class="tab-btn" data-range="today">Өнөөдөр</button>
+            <button class="tab-btn" data-range="7">7 хоног</button>
+            <button class="tab-btn" data-range="30">30 хоног</button>
+            <button class="tab-btn active" data-range="month">Энэ сар</button>
+            <button class="tab-btn" data-range="all">Бүх хугацаа</button>
           </div>
           <div class="compact-grid compact-grid-4" style="gap:12px">
             <div class="field">
@@ -80,37 +160,24 @@
                 <option value="all">Бүх байр</option>
               </select>
             </div>
-            <div class="field">
-              <label for="filter-dept">Алба</label>
-              <select id="filter-dept" class="select">
-                <option value="all">Бүх алба</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="filter-team">Бригад</label>
-              <select id="filter-team" class="select">
-                <option value="all">Бүх бригад</option>
-              </select>
-            </div>
             <div class="field" id="filter-status-wrap">
               <label for="filter-status">Төлөв</label>
               <select id="filter-status" class="select">
                 <option value="all">Бүх төлөв</option>
                 <option value="new">Шинэ</option>
                 <option value="assigned">Хуваарилсан</option>
-                <option value="urgent">Яаралтай</option>
                 <option value="in_progress">Явцдаа</option>
                 <option value="done">Дууссан</option>
               </select>
             </div>
             <div class="field" id="filter-issue-wrap">
-              <label for="filter-issue">Төрөл</label>
+              <label for="filter-issue">Гэмтлийн төрөл</label>
               <select id="filter-issue" class="select">
                 <option value="all">Бүх төрөл</option>
               </select>
             </div>
             <div class="field" id="filter-source-wrap">
-              <label for="filter-source">Эх сурвалж</label>
+              <label for="filter-source">Ирсэн суваг</label>
               <select id="filter-source" class="select">
                 <option value="all">Бүгд</option>
                 <option value="web">Вэб</option>
@@ -118,14 +185,21 @@
               </select>
             </div>
             <div class="field" id="filter-priority-wrap">
-              <label for="filter-priority">Яаралт</label>
+              <label for="filter-priority">Яаралтай эсэх</label>
               <select id="filter-priority" class="select">
                 <option value="all">Бүгд</option>
                 <option value="normal">Энгийн</option>
                 <option value="urgent">Яаралтай</option>
               </select>
             </div>
+            <div class="field" id="filter-material-wrap">
+              <label for="filter-material">Ашигласан материал</label>
+              <select id="filter-material" class="select">
+                <option value="all">Бүх материал</option>
+              </select>
+            </div>
           </div>
+          <div id="filter-summary" style="display:flex;gap:8px;flex-wrap:wrap;color:var(--slate-600);font-size:13px"></div>
         </div>
 
         <!-- Main + Breakdowns -->
@@ -139,6 +213,31 @@
           </div>
 
           <div id="breakdown-cards" class="section-stack"></div>
+        </div>
+
+        <!-- Print-only footer: signature + stamp -->
+        <div id="print-footer">
+          <div class="pf-row">
+            <div class="pf-col">
+              <p class="pf-label">Тайлан гаргасан:</p>
+              <div class="pf-line"></div>
+              <p class="pf-name">Овог нэр / Гарын үсэг</p>
+            </div>
+            <div class="pf-col">
+              <p class="pf-label">Хянасан:</p>
+              <div class="pf-line"></div>
+              <p class="pf-name">Овог нэр / Гарын үсэг</p>
+            </div>
+            <div class="pf-col">
+              <p class="pf-label">Батлав:</p>
+              <div class="pf-line"></div>
+              <p class="pf-name">Овог нэр / Гарын үсэг</p>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+              <p class="pf-label" style="text-align:center">Тамга</p>
+              <div class="pf-stamp">Байгууллагын<br>тамга</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

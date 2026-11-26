@@ -28,7 +28,7 @@ export const getStatusMeta = (status) => {
     urgent:      { label: "Яаралтай",    badgeClass: "badge-urgent" },
     in_progress: { label: "Явцдаа",      badgeClass: "badge-in_progress" },
     done:        { label: "Дууссан",      badgeClass: "badge-done" },
-    converted:   { label: "Хөрвүүлсэн",  badgeClass: "badge-converted" },
+    converted:   { label: "Хүсэлт болгосон", badgeClass: "badge-converted" },
   };
   return map[status] ?? { label: status, badgeClass: "badge-new" };
 };
@@ -184,7 +184,7 @@ export const emptyState = (title = "Мэдээлэл алга") =>
   `<div class="empty-state">${title}</div>`;
 
 export const spinner = () =>
-  `<div class="loading-state"><div class="spinner"></div><p style="margin-top:12px;font-size:13px">Ачааллаж байна...</p></div>`;
+  `<div class="loading-state"><div class="spinner"></div><p style="margin-top:12px;font-size:13px">Ачаалж байна…</p></div>`;
 
 export const escapeHtml = (str) =>
   String(str ?? "")
